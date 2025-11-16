@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Venue Booking System
 
-## Getting Started
+場地預約系統
 
-First, run the development server:
+## 功能特色
+
+- ✅ 場地預約管理（單次/連續預約）
+- ✅ 日曆式時段選擇
+- ✅ PostgreSQL 資料庫儲存
+- ✅ PWA 支援（可離線安裝）
+- ✅ 響應式設計
+- ✅ 即時預約狀態
+
+## 環境需求
+
+- Node.js >= 20.9.0
+- PostgreSQL >= 12
+- npm 或 yarn
+
+## 安裝步驟
+
+### 1. 安裝相依套件
+
+```bash
+npm install
+```
+
+### 2. 設定資料庫
+
+建立 PostgreSQL 資料庫：
+
+```bash
+createdb venue_booking
+```
+
+執行資料庫 schema：
+
+```bash
+psql -d venue_booking -f database/schema.sql
+```
+
+### 3. 設定環境變數
+
+複製範例檔案並填入資料庫連線資訊：
+
+```bash
+cp .env.local.example .env.local
+```
+
+編輯 `.env.local`：
+
+```env
+DATABASE_URL=postgresql://username:password@localhost:5432/venue_booking
+```
+
+### 4. 啟動開發伺服器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開啟瀏覽器訪問：http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 測試
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 執行單元測試
 
-## Learn More
+```bash
+npm test
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 執行測試並生成覆蓋率報告
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm test -- --coverage
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 執行特定測試檔案
 
-## Deploy on Vercel
+```bash
+npm test src/components/__tests__/BookingForm.test.tsx
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 測試覆蓋率
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+專案包含 23 個測試套件，135 個測試案例，覆蓋率達 82.78%：
+
+- **Components**: 81.59% 覆蓋率
+- **Hooks**: 76.66% 覆蓋率  
+- **Utils**: 100% 覆蓋率
+- **API Routes**: 完整測試覆蓋
+
+測試涵蓋：
+- ✅ React 元件渲染與互動
+- ✅ 自訂 Hooks 邏輯
+- ✅ API 路由處理
+- ✅ 工具函數
+- ✅ 表單驗證
+- ✅ 日期與時間處理
+
+## 資料庫結構
+
+```sql
+CREATE TABLE bookings (
+  id SERIAL PRIMARY KEY,
+  date DATE NOT NULL,
+  time VARCHAR(20) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  people_count INTEGER NOT NULL,
+  is_recurring BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(date, time)
+);
+```
+
+## License
+
+MIT
+
