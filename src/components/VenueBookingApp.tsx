@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useBookings } from '@/hooks/useBookings';
 import { useCalendar } from '@/hooks/useCalendar';
-import { generateTimeSlots, generateRecurringDates, getTodayString } from '@/utils/timeSlotUtils';
-import { validateBookingForm } from '@/utils/formValidation';
+import { useBookingActions } from '@/hooks/useBookingActions';
+import { generateTimeSlots, getTodayString } from '@/utils/timeSlotUtils';
 import { WEEK_DAYS } from '@/constants/calendar';
 import NavigationHeader from './NavigationHeader';
 import BookingView from './BookingView';
@@ -30,14 +30,6 @@ const VenueBookingApp: React.FC = () => {
     phone: '',
     peopleCount: '',
   });
-
-  // Dialog state
-  const [showDialog, setShowDialog] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState('');
-  const [dialogType, setDialogType] = useState<'success' | 'error'>('success');
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [bookingToCancel, setBookingToCancel] = useState<number | null>(null);
-  const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [recurringWeeks, setRecurringWeeks] = useState(1);
 
   // Custom hooks
@@ -51,6 +43,12 @@ const VenueBookingApp: React.FC = () => {
   } = useBookings();
 
   const { currentMonth, calendarDays, navigateMonth } = useCalendar(selectedDate);
+
+  const bookingActions = useBookingActions({
+    createBooking,
+    createBatchBooking,
+    deleteBooking,
+  });
 
   // Initialize
   useEffect(() => {
@@ -79,43 +77,16 @@ const VenueBookingApp: React.FC = () => {
     setSelectedTime('');
   };
 
-  const showDialogMessage = (message: string, type: 'success' | 'error' = 'success') => {
-    setDialogMessage(message);
-    setDialogType(type);
-    setShowDialog(true);
-  };
-
   const handleBookingSubmit = async (isRecurring = false, weeks = 1) => {
-    const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTime);
-    if (missingFields.length > 0) {
-      showDialogMessage(`請填寫以下欄位：${missingFields.join('、')}`, 'error');
-      return;
-    }
+    const result = await bookingActions.handleBookingSubmit(
+      bookingForm,
+      selectedDate,
+      selectedTime,
+      isRecurring,
+      weeks
+    );
 
-    let result;
-    if (isRecurring) {
-      const dates = generateRecurringDates(selectedDate, weeks);
-      result = await createBatchBooking({
-        dates,
-        time: selectedTime,
-        name: bookingForm.name,
-        phone: bookingForm.phone,
-        peopleCount: bookingForm.peopleCount,
-      });
-    } else {
-      result = await createBooking({
-        date: selectedDate,
-        time: selectedTime,
-        name: bookingForm.name,
-        phone: bookingForm.phone,
-        peopleCount: bookingForm.peopleCount,
-        isRecurring: false,
-      });
-    }
-
-    showDialogMessage(result.message, result.success ? 'success' : 'error');
-
-    if (result.success) {
+    if (result.shouldResetForm) {
       // Save booking info for next use
       setLastBookingInfo({
         name: bookingForm.name,
@@ -126,32 +97,12 @@ const VenueBookingApp: React.FC = () => {
       // Reset time selection (keep personal info)
       setSelectedDate('');
       setSelectedTime('');
-      setShowRecurringModal(false);
       setRecurringWeeks(1);
     }
   };
 
   const handleRecurringClick = () => {
-    const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTime);
-    if (missingFields.length > 0) {
-      showDialogMessage(`請填寫以下欄位：${missingFields.join('、')}`, 'error');
-      return;
-    }
-    setShowRecurringModal(true);
-  };
-
-  const cancelBooking = (bookingId: number) => {
-    setBookingToCancel(bookingId);
-    setShowCancelDialog(true);
-  };
-
-  const confirmCancelBooking = async () => {
-    if (bookingToCancel) {
-      const result = await deleteBooking(bookingToCancel);
-      showDialogMessage(result.message, result.success ? 'success' : 'error');
-      setShowCancelDialog(false);
-      setBookingToCancel(null);
-    }
+    bookingActions.handleRecurringClick(bookingForm, selectedDate, selectedTime);
   };
 
   return (
@@ -181,30 +132,30 @@ const VenueBookingApp: React.FC = () => {
       )}
 
       {currentView === 'calendar' && (
-        <RecordsView bookings={bookings} cancelBooking={cancelBooking} />
+        <RecordsView bookings={bookings} cancelBooking={bookingActions.cancelBooking} />
       )}
 
       <BookingDialog
-        showDialog={showDialog}
-        dialogType={dialogType}
-        dialogMessage={dialogMessage}
-        setShowDialog={setShowDialog}
+        showDialog={bookingActions.showDialog}
+        dialogType={bookingActions.dialogType}
+        dialogMessage={bookingActions.dialogMessage}
+        setShowDialog={bookingActions.setShowDialog}
       />
       <CancelDialog
-        showCancelDialog={showCancelDialog}
-        confirmCancelBooking={confirmCancelBooking}
-        setShowCancelDialog={setShowCancelDialog}
-        setBookingToCancel={setBookingToCancel}
+        showCancelDialog={bookingActions.showCancelDialog}
+        confirmCancelBooking={bookingActions.confirmCancelBooking}
+        setShowCancelDialog={bookingActions.setShowCancelDialog}
+        setBookingToCancel={bookingActions.setBookingToCancel}
       />
       <RecurringModal
-        showRecurringModal={showRecurringModal}
+        showRecurringModal={bookingActions.showRecurringModal}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
         recurringWeeks={recurringWeeks}
         setRecurringWeeks={setRecurringWeeks}
         isTimeSlotBooked={isTimeSlotBooked}
         handleBookingSubmit={handleBookingSubmit}
-        setShowRecurringModal={setShowRecurringModal}
+        setShowRecurringModal={bookingActions.setShowRecurringModal}
       />
     </div>
   );
