@@ -11,12 +11,6 @@ interface Booking {
   isRecurring: boolean;
 }
 
-interface BookingFormData {
-  name: string;
-  phone: string;
-  peopleCount: string;
-}
-
 export const useBookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);

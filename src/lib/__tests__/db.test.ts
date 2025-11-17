@@ -12,6 +12,7 @@ jest.mock('pg', () => {
 });
 
 describe('Database Query Function', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockPool: any;
 
   beforeEach(() => {

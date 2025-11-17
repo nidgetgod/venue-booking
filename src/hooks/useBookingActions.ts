@@ -8,9 +8,26 @@ interface BookingForm {
   peopleCount: string;
 }
 
+interface CreateBookingParams {
+  date: string;
+  time: string;
+  name: string;
+  phone: string;
+  peopleCount: string;
+  isRecurring: boolean;
+}
+
+interface CreateBatchBookingParams {
+  dates: string[];
+  time: string;
+  name: string;
+  phone: string;
+  peopleCount: string;
+}
+
 interface BookingActionsOptions {
-  createBooking: (data: any) => Promise<{ success: boolean; message: string }>;
-  createBatchBooking: (data: any) => Promise<{ success: boolean; message: string }>;
+  createBooking: (data: CreateBookingParams) => Promise<{ success: boolean; message: string }>;
+  createBatchBooking: (data: CreateBatchBookingParams) => Promise<{ success: boolean; message: string }>;
   deleteBooking: (id: number) => Promise<{ success: boolean; message: string }>;
 }
 

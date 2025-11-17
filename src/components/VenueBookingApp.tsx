@@ -17,19 +17,27 @@ const VenueBookingApp: React.FC = () => {
   // View state
   const [currentView, setCurrentView] = useState<'booking' | 'calendar'>('booking');
 
-  // Form state
-  const [selectedDate, setSelectedDate] = useState('');
+  // Form state - Initialize selectedDate with today's date
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [selectedTime, setSelectedTime] = useState('');
-  const [bookingForm, setBookingForm] = useState({
-    name: '',
-    phone: '',
-    peopleCount: '',
-  });
-  const [lastBookingInfo, setLastBookingInfo] = useState({
-    name: '',
-    phone: '',
-    peopleCount: '',
-  });
+  
+  // Load last booking info from localStorage on mount
+  const getInitialBookingInfo = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lastBookingInfo');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return { name: '', phone: '', peopleCount: '' };
+        }
+      }
+    }
+    return { name: '', phone: '', peopleCount: '' };
+  };
+
+  const [bookingForm, setBookingForm] = useState(getInitialBookingInfo());
+  const [lastBookingInfo, setLastBookingInfo] = useState(getInitialBookingInfo());
   const [recurringWeeks, setRecurringWeeks] = useState(1);
 
   // Custom hooks
@@ -53,15 +61,7 @@ const VenueBookingApp: React.FC = () => {
   // Initialize
   useEffect(() => {
     fetchBookings();
-    setSelectedDate(getTodayString());
   }, [fetchBookings]);
-
-  // Restore last booking info
-  useEffect(() => {
-    if (lastBookingInfo.name || lastBookingInfo.phone || lastBookingInfo.peopleCount) {
-      setBookingForm(lastBookingInfo);
-    }
-  }, [lastBookingInfo]);
 
   // Memoized values
   const timeSlots = useMemo(() => generateTimeSlots(selectedDate), [selectedDate]);

@@ -4,19 +4,38 @@ on:
   push:
     branches:
       - main
-      - develop
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'Dockerfile'
+      - 'next.config.js'
+      - 'tsconfig.json'
+      - '.github/workflows/docker-build.yml'
     tags:
       - 'v*'
   pull_request:
-    branches:
-      - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'Dockerfile'
+      - 'next.config.js'
+      - 'tsconfig.json'
+      - '.github/workflows/docker-build.yml'
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   build-and-push:
+    needs: ci
     runs-on: ubuntu-latest
     permissions:
       contents: read

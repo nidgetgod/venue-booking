@@ -137,7 +137,7 @@ describe('VenueBookingApp', () => {
       message: '已完成預約',
     });
 
-    const { container } = render(<VenueBookingApp />);
+    render(<VenueBookingApp />);
     
     // 填寫表單
     const nameInput = screen.getByPlaceholderText('請輸入姓名');
