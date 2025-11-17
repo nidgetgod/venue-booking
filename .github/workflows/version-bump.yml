@@ -36,10 +36,17 @@ jobs:
       - name: Determine version bump type
         id: bump-type
         run: |
-          # Get commit messages since last tag
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Get commit messages since last tag or from beginning
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
-          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+          
+          if [ -z "$LAST_TAG" ]; then
+            # No tags exist, get all commits
+            COMMITS=$(git log --pretty=format:"%s")
+          else
+            # Get commits since last tag
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+          fi
           
           # Determine bump type based on conventional commits
           if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.*\))?!:|^BREAKING CHANGE:"; then
@@ -84,19 +91,48 @@ jobs:
           script: |
             const version = '${{ steps.version.outputs.new_version }}';
             const tag = `v${version}`;
+            const lastTag = '${{ steps.bump-type.outputs.last_tag }}';
             
-            // Get commits since last tag
-            const { data: commits } = await github.rest.repos.compareCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              base: '${{ steps.bump-type.outputs.last_tag }}',
-              head: 'main'
-            });
+            let changelog = '';
             
-            // Generate changelog
-            const changelog = commits.commits
-              .map(commit => `- ${commit.commit.message.split('\n')[0]} (${commit.sha.substring(0, 7)})`)
-              .join('\n');
+            if (lastTag) {
+              // Get commits since last tag
+              try {
+                const { data: commits } = await github.rest.repos.compareCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  base: lastTag,
+                  head: 'main'
+                });
+                
+                // Generate changelog
+                changelog = commits.commits
+                  .map(commit => `- ${commit.commit.message.split('\n')[0]} (${commit.sha.substring(0, 7)})`)
+                  .join('\n');
+              } catch (error) {
+                console.log('Could not compare commits, using all recent commits');
+                const { data: commits } = await github.rest.repos.listCommits({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  sha: 'main',
+                  per_page: 20
+                });
+                changelog = commits
+                  .map(commit => `- ${commit.commit.message.split('\n')[0]} (${commit.sha.substring(0, 7)})`)
+                  .join('\n');
+              }
+            } else {
+              // No previous tag, list recent commits
+              const { data: commits } = await github.rest.repos.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                sha: 'main',
+                per_page: 20
+              });
+              changelog = commits
+                .map(commit => `- ${commit.commit.message.split('\n')[0]} (${commit.sha.substring(0, 7)})`)
+                .join('\n');
+            }
             
             // Create release
             await github.rest.repos.createRelease({
