@@ -48,30 +48,86 @@ helm upgrade --install cnpg \
 
 ### Install the Chart
 
-```bash
-# Add the repository (if published)
-helm repo add venue-booking https://your-helm-repo.example.com
-helm repo update
+#### From OCI Registry (Recommended)
 
+```bash
 # Install with default values
-helm install venue-booking venue-booking/venue-booking \
+helm install venue-booking \
+  oci://ghcr.io/nidgetgod/venue-booking \
+  --version 0.1.0 \
   --namespace venue-booking \
   --create-namespace
 
-# Or install from local directory
-helm install venue-booking . \
+# Install with custom values
+helm install venue-booking \
+  oci://ghcr.io/nidgetgod/venue-booking \
+  --version 0.1.0 \
+  -f custom-values.yaml \
+  --namespace venue-booking \
+  --create-namespace
+
+# Install with inline value overrides
+helm install venue-booking \
+  oci://ghcr.io/nidgetgod/venue-booking \
+  --version 0.1.0 \
   --namespace venue-booking \
   --create-namespace \
   --set image.repository=your-registry/venue-booking \
   --set image.tag=v1.0.0
 ```
 
+#### From Local Directory (Development)
+
+```bash
+# Clone the repository
+git clone https://github.com/nidgetgod/venue-booking.git
+cd venue-booking/helm/venue-booking
+
+# Update dependencies
+helm dependency update
+
+# Install from local directory
+helm install venue-booking . \
+  --namespace venue-booking \
+  --create-namespace \
+  -f values.yaml
+```
+
+### View Chart Information
+
+```bash
+# Show chart values
+helm show values oci://ghcr.io/nidgetgod/venue-booking --version 0.1.0
+
+# Show chart README
+helm show readme oci://ghcr.io/nidgetgod/venue-booking --version 0.1.0
+
+# Show all chart information
+helm show all oci://ghcr.io/nidgetgod/venue-booking --version 0.1.0
+```
+
 ### Upgrade
 
 ```bash
-helm upgrade venue-booking venue-booking/venue-booking \
+# Upgrade to new version from OCI registry
+helm upgrade venue-booking \
+  oci://ghcr.io/nidgetgod/venue-booking \
+  --version 0.2.0 \
   --namespace venue-booking \
-  --reuse-values \
+  --reuse-values
+
+# Upgrade with new values
+helm upgrade venue-booking \
+  oci://ghcr.io/nidgetgod/venue-booking \
+  --version 0.2.0 \
+  -f updated-values.yaml \
+  --namespace venue-booking
+
+# Upgrade with inline overrides
+helm upgrade venue-booking \
+  oci://ghcr.io/nidgetgod/venue-booking \
+  --version 0.2.0 \
+  --namespace venue-booking \
   --set image.tag=v1.1.0
 ```
 
