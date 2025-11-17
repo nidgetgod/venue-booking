@@ -1,0 +1,110 @@
+name: Version Bump
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'helm/**'
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine version bump type
+        id: bump-type
+        run: |
+          # Get commit messages since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+          COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s")
+          
+          # Determine bump type based on conventional commits
+          if echo "$COMMITS" | grep -qE "^(feat|feature)(\(.*\))?!:|^BREAKING CHANGE:"; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif echo "$COMMITS" | grep -qE "^(feat|feature)(\(.*\))?:"; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          elif echo "$COMMITS" | grep -qE "^(fix|chore|docs|style|refactor|perf|test)(\(.*\))?:"; then
+            echo "type=patch" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump package.json version
+        id: version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          npm version ${{ steps.bump-type.outputs.type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped version from $CURRENT_VERSION to $NEW_VERSION"
+
+      - name: Update Helm Chart version
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+          sed -i "s/^version: .*/version: $NEW_VERSION/" helm/venue-booking/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"$NEW_VERSION\"/" helm/venue-booking/Chart.yaml
+
+      - name: Commit version bump
+        run: |
+          git add package.json helm/venue-booking/Chart.yaml
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }} [skip ci]"
+          git tag "v${{ steps.version.outputs.new_version }}"
+
+      - name: Push changes
+        run: |
+          git push origin main
+          git push origin "v${{ steps.version.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ steps.version.outputs.new_version }}';
+            const tag = `v${version}`;
+            
+            // Get commits since last tag
+            const { data: commits } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: '${{ steps.bump-type.outputs.last_tag }}',
+              head: 'main'
+            });
+            
+            // Generate changelog
+            const changelog = commits.commits
+              .map(commit => `- ${commit.commit.message.split('\n')[0]} (${commit.sha.substring(0, 7)})`)
+              .join('\n');
+            
+            // Create release
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              name: `Release ${tag}`,
+              body: `## Changes\n\n${changelog}`,
+              draft: false,
+              prerelease: false
+            });
