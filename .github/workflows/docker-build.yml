@@ -14,7 +14,7 @@ on:
       - 'tsconfig.json'
       - '.github/workflows/docker-build.yml'
     tags:
-      - 'v*'
+      - 'v*'  # Always trigger on version tags (paths filter doesn't apply to tags)
   pull_request:
     paths:
       - 'src/**'
@@ -25,6 +25,7 @@ on:
       - 'next.config.js'
       - 'tsconfig.json'
       - '.github/workflows/docker-build.yml'
+  workflow_dispatch:  # Allow manual trigger
 
 env:
   REGISTRY: ghcr.io

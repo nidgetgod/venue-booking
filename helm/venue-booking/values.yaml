@@ -48,8 +48,10 @@ securityContext:
   readOnlyRootFilesystem: false
   # -- Run container as non-root user
   runAsNonRoot: true
-  # -- User ID to run the container
-  runAsUser: 1000
+  # -- User ID to run the container (matches nextjs user in Dockerfile)
+  runAsUser: 1001
+  # -- Group ID to run the container
+  runAsGroup: 1001
 
 service:
   # -- Kubernetes service type
