@@ -12,7 +12,17 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Test and config files
+    "coverage/**",
+    "jest.config.js",
+    "jest.setup.js",
+    "public/service-worker.js",
   ]),
+  {
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
 ]);
 
 export default eslintConfig;

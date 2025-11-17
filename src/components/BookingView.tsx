@@ -9,16 +9,26 @@ import TimeSlotSelector from './TimeSlotSelector';
 import { LEGEND_ITEMS } from '@/constants/calendar';
 import { getTodayString } from '@/utils/timeSlotUtils';
 
+interface CalendarDay {
+  date: Date;
+  dateStr: string;
+  day: number;
+  isCurrentMonth: boolean;
+  isPast: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+}
+
 interface BookingViewProps {
   bookingForm: { name: string; phone: string; peopleCount: string };
   lastBookingInfo: { name: string; phone: string; peopleCount: string };
-  setBookingForm: (form: any) => void;
-  setLastBookingInfo: (info: any) => void;
+  setBookingForm: (form: { name: string; phone: string; peopleCount: string }) => void;
+  setLastBookingInfo: (info: { name: string; phone: string; peopleCount: string }) => void;
   selectedDate: string;
   selectedTime: string;
   currentMonth: Date;
   weekDays: string[];
-  calendarDays: any[];
+  calendarDays: CalendarDay[];
   handleDateSelect: (dateStr: string) => void;
   navigateMonth: (direction: number) => void;
   hasAvailableSlots: (dateStr: string) => boolean;

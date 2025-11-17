@@ -11,8 +11,8 @@ interface BookingFormProps {
     phone: string;
     peopleCount: string;
   };
-  setBookingForm: (form: any) => void;
-  setLastBookingInfo: (info: any) => void;
+  setBookingForm: (form: { name: string; phone: string; peopleCount: string }) => void;
+  setLastBookingInfo: (info: { name: string; phone: string; peopleCount: string }) => void;
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo, setBookingForm, setLastBookingInfo }) => {
