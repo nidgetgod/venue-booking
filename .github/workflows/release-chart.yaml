@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'helm/venue-booking/**'
+      - 'helm/**'
       - '.github/workflows/release-chart.yaml'
   workflow_dispatch:
 
