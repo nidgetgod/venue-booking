@@ -7,11 +7,15 @@ replicaCount: 2
 
 image:
   # -- Container image repository
-  repository: your-registry/venue-booking
+  # Examples:
+  # - ghcr.io/your-org/venue-booking (GitHub Container Registry)
+  # - your-registry.azurecr.io/venue-booking (Azure Container Registry)
+  # - docker.io/your-username/venue-booking (Docker Hub)
+  repository: ghcr.io/nidgetgod/venue-booking
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion
-  tag: "latest"
+  tag: "1.0.0"
 
 # -- Image pull secrets for private registries
 imagePullSecrets: []
@@ -58,11 +62,11 @@ service:
 ingress:
   # -- Enable ingress controller resource
   enabled: true
-  # -- Ingress class name
-  className: "nginx"
+  # -- Ingress class name (empty to let Kubernetes decide based on default IngressClass)
+  className: ""
   # -- Additional annotations for the Ingress resource
-  annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  annotations: {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
     # kubernetes.io/tls-acme: "true"
   # -- List of hosts for the ingress
   hosts:
