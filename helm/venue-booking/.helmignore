@@ -1,0 +1,36 @@
+# .helmignore is used to specify files that should be ignored by Helm
+# when packaging charts
+
+# Version control
+.git/
+.gitignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+
+# Test files
+*_test.go
+test/
+tests/
+
+# Temporary files
+*.tmp
+*.bak
+*.orig

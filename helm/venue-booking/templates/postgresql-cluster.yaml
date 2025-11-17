@@ -1,0 +1,92 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ .Values.postgresql.cluster.name }}
+  labels:
+    {{- include "venue-booking.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.postgresql.cluster.instances }}
+  imageName: {{ .Values.postgresql.cluster.imageName }}
+
+  # Bootstrap configuration
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgresql.auth.database }}
+      owner: {{ .Values.postgresql.auth.username }}
+      secret:
+        name: {{ include "venue-booking.fullname" . }}-pg-app
+
+  # Storage configuration
+  storage:
+    size: {{ .Values.postgresql.cluster.storage.size }}
+    {{- if .Values.postgresql.cluster.storage.storageClass }}
+    storageClass: {{ .Values.postgresql.cluster.storage.storageClass }}
+    {{- end }}
+
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      {{- range $key, $value := .Values.postgresql.cluster.postgresql.parameters }}
+      {{ $key }}: {{ $value | quote }}
+      {{- end }}
+
+  # Resources
+  resources:
+    {{- toYaml .Values.postgresql.cluster.resources | nindent 4 }}
+
+  # Monitoring
+  {{- if .Values.postgresql.cluster.monitoring.enabled }}
+  monitoring:
+    enablePodMonitor: {{ .Values.postgresql.cluster.monitoring.podMonitor.enabled }}
+  {{- end }}
+
+  # Backup configuration
+  {{- if .Values.postgresql.cluster.backup.enabled }}
+  backup:
+    retentionPolicy: {{ .Values.postgresql.cluster.backup.retentionPolicy }}
+    barmanObjectStore:
+      {{- if .Values.postgresql.cluster.backup.s3.enabled }}
+      destinationPath: s3://{{ .Values.postgresql.cluster.backup.s3.bucket }}/{{ .Values.postgresql.cluster.backup.s3.path }}
+      endpointURL: {{ .Values.postgresql.cluster.backup.s3.endpointURL }}
+      s3Credentials:
+        accessKeyId:
+          name: {{ .Values.postgresql.cluster.backup.s3.credentials.existingSecret }}
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: {{ .Values.postgresql.cluster.backup.s3.credentials.existingSecret }}
+          key: SECRET_ACCESS_KEY
+      {{- else }}
+      # Use PVC for backup if S3 is not enabled
+      destinationPath: /var/lib/postgresql/backup
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+      {{- end }}
+  {{- end }}
+
+  # Affinity rules for high availability
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              cnpg.io/cluster: {{ .Values.postgresql.cluster.name }}
+          topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ .Values.postgresql.cluster.name }}-backup
+  labels:
+    {{- include "venue-booking.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.postgresql.cluster.backup.schedule | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ .Values.postgresql.cluster.name }}
+{{- end }}

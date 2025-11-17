@@ -1,0 +1,372 @@
+{{ template "chart.header" . }}
+
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Installation
+
+### Prerequisites
+
+Before installing this chart, ensure you have:
+
+1. **Kubernetes cluster** (v1.24+)
+2. **Helm 3.x** installed
+3. **CloudNativePG Operator** installed in your cluster
+
+### Installing CloudNativePG Operator
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.24/releases/cnpg-1.24.0.yaml
+```
+
+Or using Helm:
+
+```bash
+helm repo add cnpg https://cloudnative-pg.github.io/charts
+helm upgrade --install cnpg \
+  --namespace cnpg-system \
+  --create-namespace \
+  cnpg/cloudnative-pg
+```
+
+### Install the Chart
+
+```bash
+# Add the repository (if published)
+helm repo add venue-booking https://your-helm-repo.example.com
+helm repo update
+
+# Install with default values
+helm install venue-booking venue-booking/venue-booking \
+  --namespace venue-booking \
+  --create-namespace
+
+# Or install from local directory
+helm install venue-booking . \
+  --namespace venue-booking \
+  --create-namespace \
+  --set image.repository=your-registry/venue-booking \
+  --set image.tag=v1.0.0
+```
+
+### Upgrade
+
+```bash
+helm upgrade venue-booking venue-booking/venue-booking \
+  --namespace venue-booking \
+  --reuse-values \
+  --set image.tag=v1.1.0
+```
+
+### Uninstall
+
+```bash
+helm uninstall venue-booking --namespace venue-booking
+```
+
+## Configuration Examples
+
+### Quick Start (Development)
+
+```yaml
+# values-dev.yaml
+replicaCount: 1
+
+ingress:
+  enabled: false
+
+postgresql:
+  cluster:
+    instances: 1
+    storage:
+      size: 5Gi
+    backup:
+      enabled: false
+```
+
+```bash
+helm install venue-booking . -f values-dev.yaml
+```
+
+### Production with Internal PostgreSQL
+
+```yaml
+# values-prod.yaml
+replicaCount: 3
+
+image:
+  repository: ghcr.io/your-org/venue-booking
+  tag: "v1.0.0"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+
+ingress:
+  enabled: true
+  hosts:
+    - host: booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: venue-booking-tls
+      hosts:
+        - booking.example.com
+
+postgresql:
+  cluster:
+    instances: 3
+    storage:
+      size: 50Gi
+      storageClass: "fast-ssd"
+    backup:
+      enabled: true
+      retentionPolicy: "90d"
+      s3:
+        enabled: true
+        bucket: "prod-backups"
+        region: "us-east-1"
+```
+
+### External Database (AWS RDS)
+
+```yaml
+# values-external-db.yaml
+postgresql:
+  enabled: false
+
+app:
+  externalDatabase:
+    enabled: true
+    host: "mydb.abc123.us-east-1.rds.amazonaws.com"
+    port: 5432
+    database: "venue_booking"
+    username: "dbadmin"
+    existingSecret: "rds-credentials"
+    sslMode: "require"
+```
+
+More examples available in the [examples](./examples/) directory.
+
+## Database Configuration
+
+This chart supports two database configuration modes:
+
+### 1. Internal PostgreSQL (CloudNativePG)
+
+**Default mode.** Deploys a highly available PostgreSQL cluster using CloudNativePG operator.
+
+**Features:**
+- High availability with 3 replicas (configurable)
+- Automatic failover
+- Point-in-time recovery
+- Automated backups (local and S3)
+- Prometheus monitoring
+
+**Configuration:**
+```yaml
+postgresql:
+  enabled: true
+  cluster:
+    instances: 3
+    storage:
+      size: 10Gi
+```
+
+### 2. External PostgreSQL
+
+Connect to an existing PostgreSQL database (AWS RDS, Azure Database, etc.)
+
+**Using individual parameters:**
+```yaml
+postgresql:
+  enabled: false
+
+app:
+  externalDatabase:
+    enabled: true
+    host: "external-db.example.com"
+    port: 5432
+    database: "venue_booking"
+    username: "dbuser"
+    password: "secret"  # Use existingSecret instead
+    sslMode: "require"
+```
+
+**Using complete URL:**
+```yaml
+app:
+  externalDatabase:
+    enabled: true
+    url: "postgresql://user:pass@db.example.com:5432/mydb?sslmode=require"
+```
+
+**Using existing Secret (recommended):**
+```yaml
+app:
+  externalDatabase:
+    enabled: true
+    host: "db.example.com"
+    database: "venue_booking"
+    username: "dbuser"
+    existingSecret: "my-db-credentials"
+    existingSecretPasswordKey: "password"
+```
+
+## Monitoring
+
+### Prometheus Integration
+
+The chart includes PodMonitor resources for Prometheus monitoring:
+
+```yaml
+postgresql:
+  cluster:
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+```
+
+**Metrics available:**
+- PostgreSQL cluster metrics
+- Query performance
+- Replication lag
+- Connection pool stats
+
+### Health Checks
+
+Application health endpoints:
+- Liveness: `/api/health`
+- Readiness: `/api/health`
+
+## Backup and Recovery
+
+### Automated Backups
+
+```yaml
+postgresql:
+  cluster:
+    backup:
+      enabled: true
+      retentionPolicy: "30d"
+      schedule: "0 2 * * *"  # Daily at 2 AM
+```
+
+### S3 Backups
+
+```yaml
+postgresql:
+  cluster:
+    backup:
+      s3:
+        enabled: true
+        bucket: "my-backups"
+        path: "venue-booking"
+        endpointURL: "https://s3.amazonaws.com"
+        region: "us-east-1"
+        credentials:
+          existingSecret: "aws-credentials"
+```
+
+### Manual Backup
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: manual-backup-$(date +%Y%m%d-%H%M%S)
+  namespace: venue-booking
+spec:
+  cluster:
+    name: venue-booking-pg
+EOF
+```
+
+### List Backups
+
+```bash
+kubectl get backups -n venue-booking
+```
+
+## Troubleshooting
+
+### Check Pod Status
+
+```bash
+kubectl get pods -n venue-booking
+kubectl logs -f deployment/venue-booking -n venue-booking
+```
+
+### Check PostgreSQL Cluster
+
+```bash
+kubectl get cluster -n venue-booking
+kubectl describe cluster venue-booking-pg -n venue-booking
+```
+
+### Connect to Database
+
+```bash
+# Get password
+kubectl get secret venue-booking-pg-app -n venue-booking \
+  -o jsonpath='{.data.password}' | base64 -d
+
+# Port-forward
+kubectl port-forward -n venue-booking svc/venue-booking-pg-rw 5432:5432
+
+# Connect
+psql -h localhost -U venue_booking_user -d venue_booking
+```
+
+### Test Database Connection
+
+```bash
+kubectl exec -it deployment/venue-booking -n venue-booking -- \
+  sh -c 'psql $DATABASE_URL -c "SELECT version();"'
+```
+
+## Security
+
+### Best Practices
+
+1. **Use existing secrets** for sensitive data instead of values.yaml
+2. **Enable TLS/SSL** for database connections (`sslMode: require`)
+3. **Use cert-manager** for automatic TLS certificate management
+4. **Set resource limits** to prevent resource exhaustion
+5. **Enable Pod Security Standards** (already configured)
+6. **Use private registries** with imagePullSecrets
+
+### Example Secret Creation
+
+```bash
+# Database password
+kubectl create secret generic venue-booking-db-secret \
+  --from-literal=password='YourSecurePassword123!' \
+  -n venue-booking
+
+# AWS S3 credentials
+kubectl create secret generic aws-s3-credentials \
+  --from-literal=ACCESS_KEY_ID='your-key' \
+  --from-literal=SECRET_ACCESS_KEY='your-secret' \
+  -n venue-booking
+```
+
+## {{ template "chart.valuesSection" . }}
+
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v{{ .HelmDocsVersion }}](https://github.com/norwoodj/helm-docs/releases/v{{ .HelmDocsVersion }})
