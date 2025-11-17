@@ -1,0 +1,262 @@
+# Default values for venue-booking.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Number of replicas for the venue-booking deployment
+replicaCount: 2
+
+image:
+  # -- Container image repository
+  repository: your-registry/venue-booking
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion
+  tag: "latest"
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the release
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use. If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- Annotations to add to the pod
+podAnnotations: {}
+
+podSecurityContext:
+  # -- FSGroup that owns the pod's volumes
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    # -- Linux capabilities to drop
+    drop:
+    - ALL
+  # -- Mount root filesystem as read-only
+  readOnlyRootFilesystem: false
+  # -- Run container as non-root user
+  runAsNonRoot: true
+  # -- User ID to run the container
+  runAsUser: 1000
+
+service:
+  # -- Kubernetes service type
+  type: ClusterIP
+  # -- Service port
+  port: 3000
+  # -- Container target port
+  targetPort: 3000
+
+ingress:
+  # -- Enable ingress controller resource
+  enabled: true
+  # -- Ingress class name
+  className: "nginx"
+  # -- Additional annotations for the Ingress resource
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # kubernetes.io/tls-acme: "true"
+  # -- List of hosts for the ingress
+  hosts:
+    - host: venue-booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  # -- TLS configuration for the ingress
+  tls:
+    - secretName: venue-booking-tls
+      hosts:
+        - venue-booking.example.com
+
+# -- Resource requests and limits for the venue-booking pods
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  # -- Enable Horizontal Pod Autoscaler
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 2
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Node selector for pod assignment
+nodeSelector: {}
+
+# -- Tolerations for pod assignment
+tolerations: []
+
+# -- Affinity rules for pod assignment
+affinity: {}
+
+# Application Configuration
+app:
+  env:
+    # -- Node environment (production, development, etc.)
+    NODE_ENV: production
+  # -- Additional environment variables to add to the container
+  extraEnv: []
+  # - name: CUSTOM_VAR
+  #   value: "custom-value"
+  # - name: SECRET_VAR
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: my-secret
+  #       key: secret-key
+  
+  # -- External database configuration (used when postgresql.enabled = false)
+  externalDatabase:
+    # -- Enable external database connection
+    enabled: false
+    # -- Full database URL (takes precedence if provided)
+    url: ""
+    # -- Database host (if not using url)
+    host: ""
+    # -- Database port
+    port: 5432
+    # -- Database name
+    database: ""
+    # -- Database username
+    username: ""
+    # -- Database password (not recommended, use existingSecret instead)
+    password: ""
+    # -- Name of existing secret containing database password
+    existingSecret: ""
+    # -- Key in the existing secret that contains the password
+    existingSecretPasswordKey: "password"
+    # -- SSL mode: disable, require, verify-ca, verify-full
+    sslMode: "require"
+
+# PostgreSQL Configuration using CloudNativePG
+postgresql:
+  # -- Enable internal PostgreSQL cluster using CloudNativePG operator
+  enabled: true
+  # -- SSL mode for internal PostgreSQL: disable, prefer, require
+  sslMode: "prefer"
+  cluster:
+    # -- Name of the PostgreSQL cluster
+    name: venue-booking-pg
+    # -- Number of PostgreSQL instances in the cluster
+    instances: 3
+    # -- PostgreSQL container image
+    imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+    
+    # Storage configuration
+    storage:
+      # -- Size of the persistent volume for each PostgreSQL instance
+      size: 10Gi
+      # -- Storage class name. Empty string uses default storage class
+      storageClass: ""
+    
+    # Backup configuration
+    backup:
+      # -- Enable automated backups
+      enabled: true
+      # -- Backup retention policy (e.g., "30d", "7d")
+      retentionPolicy: "30d"
+      # -- Backup schedule in cron format
+      schedule: "0 2 * * *"
+      # -- S3-compatible storage configuration for backups
+      s3:
+        # -- Enable S3 backups
+        enabled: false
+        # -- S3 bucket name
+        # bucket: "my-backup-bucket"
+        # -- Path within the S3 bucket
+        # path: "venue-booking-backups"
+        # -- S3 endpoint URL
+        # endpointURL: "https://s3.amazonaws.com"
+        # -- AWS region
+        # region: "us-east-1"
+        # -- Credentials configuration
+        # credentials:
+        #   existingSecret: "aws-credentials"
+    
+    # -- Monitoring configuration
+    monitoring:
+      # -- Enable monitoring
+      enabled: true
+      podMonitor:
+        # -- Enable Prometheus PodMonitor
+        enabled: true
+    
+    # -- PostgreSQL configuration parameters
+    postgresql:
+      # -- PostgreSQL server parameters
+      parameters:
+        max_connections: "200"
+        shared_buffers: "256MB"
+        effective_cache_size: "1GB"
+        maintenance_work_mem: "64MB"
+        checkpoint_completion_target: "0.9"
+        wal_buffers: "16MB"
+        default_statistics_target: "100"
+        random_page_cost: "1.1"
+        effective_io_concurrency: "200"
+        work_mem: "1310kB"
+        min_wal_size: "1GB"
+        max_wal_size: "4GB"
+    
+    # -- Database initialization configuration
+    bootstrap:
+      initdb:
+        # -- Database name to create
+        database: venue_booking
+        # -- Database owner
+        owner: venue_booking_user
+        # -- Secret containing initial credentials
+        secret:
+          name: venue-booking-pg-app
+    
+    # -- Resource requests and limits for PostgreSQL pods
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "2000m"
+
+  # -- Database credentials configuration
+  auth:
+    # -- PostgreSQL username
+    username: venue_booking_user
+    # -- PostgreSQL database name
+    database: venue_booking
+    # -- PostgreSQL password (auto-generated if empty)
+    password: ""
+    # -- Name of existing secret containing credentials
+    existingSecret: ""
+    # -- Keys for username and password in existing secret
+    secretKeys:
+      userPasswordKey: password
+
+# -- CloudNativePG Operator Configuration
+cloudnative-pg:
+  # -- Monitoring configuration for CNPG operator
+  monitoring:
+    podMonitor:
+      # -- Enable PodMonitor for CNPG operator
+      enabled: true
+  
+  # -- Operator configuration
+  config:
+    # -- Create operator config
+    create: true

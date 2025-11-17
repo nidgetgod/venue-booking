@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "venue-booking.fullname" . }}
+  labels:
+    {{- include "venue-booking.labels" . | nindent 4 }}
+data:
+  # Add any application configuration here
+  # Example:
+  # APP_NAME: "venue-booking"
+  # LOG_LEVEL: "info"

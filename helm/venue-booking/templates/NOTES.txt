@@ -1,0 +1,66 @@
+# NOTES.txt will be displayed after installation
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+{{- if .Values.postgresql.enabled }}
+
+PostgreSQL Cluster Status:
+  Check the cluster status with:
+  $ kubectl get cluster {{ .Values.postgresql.cluster.name }} -n {{ .Release.Namespace }}
+
+Database Connection:
+  Host: {{ .Values.postgresql.cluster.name }}-rw.{{ .Release.Namespace }}.svc.cluster.local
+  Port: 5432
+  Database: {{ .Values.postgresql.auth.database }}
+  Username: {{ .Values.postgresql.auth.username }}
+
+  Get the password with:
+  $ kubectl get secret {{ include "venue-booking.fullname" . }}-pg-app -n {{ .Release.Namespace }} -o jsonpath='{.data.password}' | base64 -d
+
+  Port-forward to connect:
+  $ kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Values.postgresql.cluster.name }}-rw 5432:5432
+{{- end }}
+
+Application Access:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  URL: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+  Get the application URL by running:
+  $ export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "venue-booking.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  $ kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 3000:3000
+  
+  Visit http://127.0.0.1:3000 in your browser
+{{- end }}
+
+Monitoring:
+{{- if .Values.postgresql.cluster.monitoring.enabled }}
+  PostgreSQL metrics are available via PodMonitor
+{{- end }}
+
+Next Steps:
+  1. Wait for all pods to be ready:
+     $ kubectl get pods -n {{ .Release.Namespace }} -w
+
+  2. Check the application logs:
+     $ kubectl logs -f deployment/{{ include "venue-booking.fullname" . }} -n {{ .Release.Namespace }}
+
+  3. Verify database connectivity:
+     $ kubectl exec -it deployment/{{ include "venue-booking.fullname" . }} -n {{ .Release.Namespace }} -- sh -c 'echo "SELECT 1" | psql $DATABASE_URL'
+
+{{- if .Values.postgresql.cluster.backup.enabled }}
+
+Backup Schedule:
+  Backups are scheduled at: {{ .Values.postgresql.cluster.backup.schedule }}
+  Retention: {{ .Values.postgresql.cluster.backup.retentionPolicy }}
+
+  List backups:
+  $ kubectl get backups -n {{ .Release.Namespace }}
+{{- end }}

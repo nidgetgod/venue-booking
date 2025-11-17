@@ -1,0 +1,444 @@
+# Example values.yaml configurations for different scenarios
+
+# ==============================================================================
+# Production Configuration with Internal CNPG PostgreSQL
+# ==============================================================================
+# Use this configuration for production deployments with high availability
+# PostgreSQL cluster managed by CloudNativePG operator.
+#
+# To use this configuration:
+#   helm install venue-booking . -f examples/values-production.yaml
+
+## Example: values-production.yaml
+---
+replicaCount: 3
+
+image:
+  repository: ghcr.io/your-org/venue-booking
+  pullPolicy: IfNotPresent
+  tag: "v1.0.0"
+
+imagePullSecrets:
+  - name: ghcr-pull-secret
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "1000m"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: venue-booking-tls
+      hosts:
+        - booking.example.com
+
+postgresql:
+  enabled: true
+  sslMode: "require"
+  cluster:
+    name: venue-booking-pg
+    instances: 3
+    imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+    
+    storage:
+      size: 50Gi
+      storageClass: "fast-ssd"
+    
+    backup:
+      enabled: true
+      retentionPolicy: "90d"
+      schedule: "0 2 * * *"
+      s3:
+        enabled: true
+        bucket: "prod-venue-booking-backups"
+        path: "postgresql"
+        endpointURL: "https://s3.amazonaws.com"
+        region: "us-east-1"
+        credentials:
+          existingSecret: "aws-s3-credentials"
+    
+    monitoring:
+      enabled: true
+      podMonitor:
+        enabled: true
+    
+    resources:
+      requests:
+        memory: "2Gi"
+        cpu: "1000m"
+      limits:
+        memory: "4Gi"
+        cpu: "2000m"
+  
+  auth:
+    username: venue_booking_user
+    database: venue_booking
+    # Password will be auto-generated if not provided
+    existingSecret: ""
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: venue-booking
+          topologyKey: kubernetes.io/hostname
+
+# ==============================================================================
+# Development Configuration with Single PostgreSQL Instance
+# ==============================================================================
+# Use this configuration for development/testing environments
+# with minimal resource requirements.
+#
+# To use this configuration:
+#   helm install venue-booking-dev . -f examples/values-development.yaml
+
+## Example: values-development.yaml
+---
+replicaCount: 1
+
+image:
+  repository: venue-booking
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
+
+ingress:
+  enabled: false
+
+postgresql:
+  enabled: true
+  sslMode: "prefer"
+  cluster:
+    name: venue-booking-pg
+    instances: 1
+    imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+    
+    storage:
+      size: 5Gi
+    
+    backup:
+      enabled: false
+    
+    monitoring:
+      enabled: false
+    
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "250m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+  
+  auth:
+    username: venue_booking_user
+    database: venue_booking
+    password: "dev-password"
+
+# ==============================================================================
+# External Database Configuration (AWS RDS)
+# ==============================================================================
+# Use this configuration when connecting to an external PostgreSQL database
+# such as AWS RDS, Azure Database, or Google Cloud SQL.
+#
+# To use this configuration:
+#   helm install venue-booking . -f examples/values-external-db.yaml
+
+## Example: values-external-db.yaml
+---
+replicaCount: 3
+
+image:
+  repository: ghcr.io/your-org/venue-booking
+  tag: "v1.0.0"
+
+# Disable internal PostgreSQL
+postgresql:
+  enabled: false
+
+# Configure external database
+app:
+  env:
+    NODE_ENV: production
+  
+  externalDatabase:
+    enabled: true
+    host: "mydb.abc123.us-east-1.rds.amazonaws.com"
+    port: 5432
+    database: "venue_booking"
+    username: "dbadmin"
+    # Use existing secret for password (recommended)
+    existingSecret: "rds-db-credentials"
+    existingSecretPasswordKey: "password"
+    # Or provide password directly (not recommended for production)
+    # password: "your-password-here"
+    sslMode: "require"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: venue-booking-tls
+      hosts:
+        - booking.example.com
+
+# ==============================================================================
+# External Database with Full URL
+# ==============================================================================
+# Use this configuration when you have a complete database URL
+# (e.g., from Supabase, Heroku, etc.)
+#
+# To use this configuration:
+#   helm install venue-booking . -f examples/values-external-url.yaml
+
+## Example: values-external-url.yaml
+---
+replicaCount: 2
+
+image:
+  repository: ghcr.io/your-org/venue-booking
+  tag: "v1.0.0"
+
+postgresql:
+  enabled: false
+
+app:
+  externalDatabase:
+    enabled: true
+    # Provide the complete database URL
+    url: "postgresql://user:password@db.supabase.co:5432/postgres?sslmode=require"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# ==============================================================================
+# Minimal Configuration (Quick Start)
+# ==============================================================================
+# The absolute minimal configuration needed to get started quickly
+# with all defaults.
+#
+# To use this configuration:
+#   helm install venue-booking . -f examples/values-minimal.yaml
+
+## Example: values-minimal.yaml
+---
+image:
+  repository: your-registry/venue-booking
+  tag: "latest"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: venue-booking.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Everything else will use defaults:
+# - 2 replicas for the application
+# - 3 PostgreSQL instances with CNPG
+# - 10Gi storage per PostgreSQL instance
+# - ClusterIP service
+# - Auto-generated database password
+
+# ==============================================================================
+# High Security Configuration
+# ==============================================================================
+# Configuration with enhanced security settings
+#
+# To use this configuration:
+#   helm install venue-booking . -f examples/values-security.yaml
+
+## Example: values-security.yaml
+---
+replicaCount: 3
+
+image:
+  repository: ghcr.io/your-org/venue-booking
+  tag: "v1.0.0"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ghcr-pull-secret
+
+# Strict security context
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10000
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10000
+  fsGroup: 10000
+  seccompProfile:
+    type: RuntimeDefault
+
+postgresql:
+  enabled: true
+  sslMode: "verify-full"
+  cluster:
+    instances: 3
+    
+    postgresql:
+      parameters:
+        ssl: "on"
+        ssl_min_protocol_version: "TLSv1.3"
+        password_encryption: "scram-sha-256"
+    
+    backup:
+      enabled: true
+      retentionPolicy: "90d"
+      schedule: "0 2 * * *"
+      s3:
+        enabled: true
+        bucket: "secure-backups"
+        path: "venue-booking"
+        endpointURL: "https://s3.amazonaws.com"
+        region: "us-east-1"
+        credentials:
+          existingSecret: "aws-s3-credentials"
+  
+  auth:
+    existingSecret: "venue-booking-db-secret"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-protocols: "TLSv1.3"
+  hosts:
+    - host: booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: venue-booking-tls
+      hosts:
+        - booking.example.com
+
+# ==============================================================================
+# Multi-Environment Configuration Pattern
+# ==============================================================================
+# Base configuration that can be extended for different environments
+
+## Example: values-base.yaml (shared configuration)
+---
+image:
+  repository: ghcr.io/your-org/venue-booking
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+## Example: values-staging.yaml (extends base)
+---
+# Merge with: helm install -f values-base.yaml -f values-staging.yaml
+replicaCount: 2
+
+image:
+  tag: "v1.0.0-rc.1"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: staging.booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+postgresql:
+  enabled: true
+  cluster:
+    instances: 2
+    storage:
+      size: 20Gi
+    backup:
+      enabled: true
+      retentionPolicy: "30d"
+
+## Example: values-production.yaml (extends base)
+---
+# Merge with: helm install -f values-base.yaml -f values-production.yaml
+replicaCount: 5
+
+image:
+  tag: "v1.0.0"
+
+autoscaling:
+  enabled: true
+  minReplicas: 5
+  maxReplicas: 20
+
+ingress:
+  enabled: true
+  hosts:
+    - host: booking.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+postgresql:
+  enabled: true
+  cluster:
+    instances: 3
+    storage:
+      size: 100Gi
+    backup:
+      enabled: true
+      retentionPolicy: "90d"
+      s3:
+        enabled: true
