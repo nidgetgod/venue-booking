@@ -6,6 +6,7 @@ on:
       - main
       - develop
       - 'feature/**'
+  workflow_call:
 
 jobs:
   lint-and-test:
