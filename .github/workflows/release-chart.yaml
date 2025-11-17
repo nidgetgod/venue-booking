@@ -1,0 +1,58 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'helm/venue-booking/**'
+      - '.github/workflows/release-chart.yaml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  CHART_NAME: venue-booking
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.0'
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Package Helm Chart
+        run: |
+          helm dependency update helm/${{ env.CHART_NAME }}
+          helm package helm/${{ env.CHART_NAME }}
+
+      - name: Push Chart to GHCR
+        run: |
+          CHART_VERSION=$(grep '^version:' helm/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
+          helm push ${{ env.CHART_NAME }}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
+
+      - name: Summary
+        run: |
+          CHART_VERSION=$(grep '^version:' helm/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
+          echo "## 🎉 Helm Chart Released" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Chart:** ${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${CHART_VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "**Registry:** ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Installation" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "helm install ${{ env.CHART_NAME }} oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.CHART_NAME }} --version ${CHART_VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
