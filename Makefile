@@ -1,12 +1,14 @@
-.PHONY: help build push deploy clean test
+.PHONY: help build push deploy clean test version-bump version-release helm-package
 
 # Configuration variables
 REGISTRY ?= ghcr.io
 IMAGE_NAME ?= nidgetgod/venue-booking
-VERSION ?= latest
-IMAGE_TAG = $(REGISTRY)/$(IMAGE_NAME):$(VERSION)
+VERSION ?= $(shell node -p "require('./package.json').version")
+IMAGE_TAG = $(REGISTRY)/$(IMAGE_NAME):v$(VERSION)
 HELM_RELEASE = venue-booking
 NAMESPACE = venue-booking
+HELM_CHART_DIR = helm/venue-booking
+HELM_PACKAGE_DIR = helm/packages
 
 help: ## Display this help message
 	@echo "Available commands:"
@@ -45,18 +47,18 @@ helm-template: ## Render Helm templates
 
 helm-install: ## Install Helm chart
 	@echo "Installing Helm chart..."
-	helm install $(HELM_RELEASE) helm/venue-booking \
+	helm install $(HELM_RELEASE) $(HELM_CHART_DIR) \
 		--namespace $(NAMESPACE) \
 		--create-namespace \
 		--set image.repository=$(REGISTRY)/$(IMAGE_NAME) \
-		--set image.tag=$(VERSION)
+		--set image.tag=v$(VERSION)
 
 helm-upgrade: ## Upgrade Helm chart
 	@echo "Upgrading Helm chart..."
-	helm upgrade --install $(HELM_RELEASE) helm/venue-booking \
+	helm upgrade --install $(HELM_RELEASE) $(HELM_CHART_DIR) \
 		--namespace $(NAMESPACE) \
 		--set image.repository=$(REGISTRY)/$(IMAGE_NAME) \
-		--set image.tag=$(VERSION)
+		--set image.tag=v$(VERSION)
 
 helm-uninstall: ## Uninstall Helm chart
 	@echo "Uninstalling Helm chart..."
@@ -95,3 +97,29 @@ test-coverage: ## Run tests with coverage report
 
 lint: ## Run linting
 	npm run lint
+
+# Version management
+version-bump: ## Bump version (usage: make version-bump VERSION=1.2.2)
+	@if [ -z "$(VERSION)" ] || [ "$(VERSION)" = "latest" ]; then \
+		echo "Error: VERSION is required (e.g., make version-bump VERSION=1.2.2)"; \
+		exit 1; \
+	fi
+	@echo "Bumping version to $(VERSION)..."
+	@./scripts/version-bump.sh $(VERSION)
+
+helm-package: ## Package Helm chart
+	@echo "Packaging Helm chart..."
+	@mkdir -p $(HELM_PACKAGE_DIR)
+	@helm package $(HELM_CHART_DIR) -d $(HELM_PACKAGE_DIR)
+	@echo "Updating Helm repository index..."
+	@helm repo index $(HELM_PACKAGE_DIR) --url https://nidgetgod.github.io/venue-booking/helm/packages
+	@echo "Helm chart packaged successfully!"
+
+version-release: build push helm-package ## Complete version release workflow (build image, push, package helm chart)
+	@echo "Version $(VERSION) release complete!"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Commit changes: git add . && git commit -m 'chore: release v$(VERSION)'"
+	@echo "  2. Create git tag: git tag v$(VERSION)"
+	@echo "  3. Push to remote: git push origin main --tags"
+	@echo "  4. Deploy with Helm chart: make helm-upgrade VERSION=$(VERSION)"
