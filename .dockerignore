@@ -64,10 +64,6 @@ argocd/
 k8s/
 kubernetes/
 
-# Database and Scripts are needed for migrations
-# database/
-# scripts/
-
 # Tests
 __tests__/
 *.test.ts
