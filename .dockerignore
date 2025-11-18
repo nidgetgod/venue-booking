@@ -64,12 +64,9 @@ argocd/
 k8s/
 kubernetes/
 
-# Database
-database/
-*.sql
-
-# Scripts
-scripts/
+# Database and Scripts are needed for migrations
+# database/
+# scripts/
 
 # Tests
 __tests__/

@@ -15,7 +15,6 @@ interface CalendarSelectorProps {
   currentMonth: Date;
   weekDays: string[];
   calendarDays: CalendarDay[];
-  selectedDate: string;
   handleDateSelect: (dateStr: string) => void;
   navigateMonth: (direction: number) => void;
   hasAvailableSlots: (dateStr: string) => boolean;
@@ -25,7 +24,6 @@ const CalendarSelector: React.FC<CalendarSelectorProps> = ({
   currentMonth,
   weekDays,
   calendarDays,
-  selectedDate,
   handleDateSelect,
   navigateMonth,
   hasAvailableSlots,

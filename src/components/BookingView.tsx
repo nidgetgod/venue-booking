@@ -89,7 +89,6 @@ const BookingView: React.FC<BookingViewProps> = ({
           currentMonth={currentMonth}
           weekDays={weekDays}
           calendarDays={calendarDays}
-          selectedDate={selectedDate}
           handleDateSelect={handleDateSelect}
           navigateMonth={navigateMonth}
           hasAvailableSlots={hasAvailableSlots}
