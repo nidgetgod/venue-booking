@@ -33,16 +33,27 @@ spec:
       {{- if .Values.postgresql.enabled }}
       initContainers:
         - name: wait-for-db
-          image: busybox:1.36
+          image: postgres:16-alpine
           command:
             - sh
             - -c
             - |
-              until nc -z {{ .Values.postgresql.cluster.name }}-rw.{{ .Release.Namespace }}.svc.cluster.local 5432; do
-                echo "Waiting for PostgreSQL..."
+              until pg_isready -h {{ .Values.postgresql.cluster.name }}-rw.{{ .Release.Namespace }}.svc.cluster.local -p 5432 -U {{ include "venue-booking.databaseUsername" . }}; do
+                echo "Waiting for PostgreSQL to be ready..."
                 sleep 2
               done
-              echo "PostgreSQL is ready!"
+              echo "PostgreSQL is ready! Testing connection..."
+              until PGPASSWORD="${DATABASE_PASSWORD}" psql -h {{ .Values.postgresql.cluster.name }}-rw.{{ .Release.Namespace }}.svc.cluster.local -p 5432 -U {{ include "venue-booking.databaseUsername" . }} -d {{ include "venue-booking.databaseName" . }} -c "SELECT 1" > /dev/null 2>&1; do
+                echo "Waiting for database connection..."
+                sleep 2
+              done
+              echo "Database connection successful!"
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "venue-booking.databaseSecretName" . }}
+                  key: {{ include "venue-booking.databaseSecretPasswordKey" . }}
           resources:
             limits:
               cpu: 100m
@@ -50,19 +61,52 @@ spec:
             requests:
               cpu: 50m
               memory: 64Mi
+        - name: run-migrations
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command:
+            - node
+            - scripts/migrate.js
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.app.env.NODE_ENV | quote }}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "venue-booking.databaseSecretName" . }}
+                  key: {{ include "venue-booking.databaseSecretPasswordKey" . }}
+            - name: DATABASE_URL
+              value: {{ include "venue-booking.databaseUrl" . | quote }}
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
       {{- else if and .Values.app.externalDatabase.enabled .Values.app.externalDatabase.host }}
       initContainers:
         - name: wait-for-db
-          image: busybox:1.36
+          image: postgres:16-alpine
           command:
             - sh
             - -c
             - |
-              until nc -z {{ .Values.app.externalDatabase.host }} {{ .Values.app.externalDatabase.port }}; do
-                echo "Waiting for external PostgreSQL at {{ .Values.app.externalDatabase.host }}:{{ .Values.app.externalDatabase.port }}..."
+              until pg_isready -h {{ .Values.app.externalDatabase.host }} -p {{ .Values.app.externalDatabase.port }} -U {{ .Values.app.externalDatabase.username }}; do
+                echo "Waiting for PostgreSQL to be ready at {{ .Values.app.externalDatabase.host }}:{{ .Values.app.externalDatabase.port }}..."
                 sleep 2
               done
-              echo "PostgreSQL is ready!"
+              echo "PostgreSQL is ready! Testing connection..."
+              until PGPASSWORD="${DATABASE_PASSWORD}" psql -h {{ .Values.app.externalDatabase.host }} -p {{ .Values.app.externalDatabase.port }} -U {{ .Values.app.externalDatabase.username }} -d {{ .Values.app.externalDatabase.database }} -c "SELECT 1" > /dev/null 2>&1; do
+                echo "Waiting for database connection..."
+                sleep 2
+              done
+              echo "Database connection successful!"
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "venue-booking.databaseSecretName" . }}
+                  key: {{ include "venue-booking.databaseSecretPasswordKey" . }}
           resources:
             limits:
               cpu: 100m
@@ -70,6 +114,28 @@ spec:
             requests:
               cpu: 50m
               memory: 64Mi
+        - name: run-migrations
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command:
+            - node
+            - scripts/migrate.js
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.app.env.NODE_ENV | quote }}
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "venue-booking.databaseSecretName" . }}
+                  key: {{ include "venue-booking.databaseSecretPasswordKey" . }}
+            - name: DATABASE_URL
+              value: {{ include "venue-booking.databaseUrl" . | quote }}
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
       {{- end }}
       
       containers:
