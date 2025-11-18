@@ -2,19 +2,8 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'Dockerfile'
-      - 'next.config.js'
-      - 'tsconfig.json'
-      - '.github/workflows/docker-build.yml'
     tags:
-      - 'v*'  # Always trigger on version tags (paths filter doesn't apply to tags)
+      - 'v*'  # Only trigger on version tags
   workflow_dispatch:  # Allow manual trigger
 
 env:
