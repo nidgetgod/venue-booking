@@ -3,15 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 async function runMigration() {
-  // Configure SSL based on DATABASE_URL
-  const databaseUrl = process.env.DATABASE_URL;
-  const sslConfig = databaseUrl && (databaseUrl.includes('sslmode=require') || process.env.NODE_ENV === 'production')
-    ? { rejectUnauthorized: false }
-    : false;
-
   const pool = new Pool({
-    connectionString: databaseUrl,
-    ssl: sslConfig,
+    connectionString: process.env.DATABASE_URL,
   });
 
   try {
