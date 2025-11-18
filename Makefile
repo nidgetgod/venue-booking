@@ -99,13 +99,13 @@ lint: ## Run linting
 	npm run lint
 
 # Version management
-version-bump: ## Bump version (usage: make version-bump VERSION=1.2.2)
-	@if [ -z "$(VERSION)" ] || [ "$(VERSION)" = "latest" ]; then \
-		echo "Error: VERSION is required (e.g., make version-bump VERSION=1.2.2)"; \
+version-bump: ## Bump version (usage: make version-bump NEW_VERSION=1.2.2)
+	@if [ -z "$(NEW_VERSION)" ]; then \
+		echo "Error: NEW_VERSION is required (e.g., make version-bump NEW_VERSION=1.2.2)"; \
 		exit 1; \
 	fi
-	@echo "Bumping version to $(VERSION)..."
-	@./scripts/version-bump.sh $(VERSION)
+	@echo "Bumping version from $(VERSION) to $(NEW_VERSION)..."
+	@./scripts/version-bump.sh $(NEW_VERSION)
 
 helm-package: ## Package Helm chart
 	@echo "Packaging Helm chart..."
