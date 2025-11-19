@@ -81,7 +81,7 @@ helm install venue-booking \
 ```bash
 # Clone the repository
 git clone https://github.com/nidgetgod/venue-booking.git
-cd venue-booking/helm/venue-booking
+cd venue-booking/charts/venue-booking
 
 # Update dependencies
 helm dependency update

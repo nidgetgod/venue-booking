@@ -84,12 +84,12 @@ jobs:
       - name: Update Helm Chart version
         run: |
           NEW_VERSION="${{ steps.version.outputs.new_version }}"
-          sed -i "s/^version: .*/version: $NEW_VERSION/" helm/venue-booking/Chart.yaml
-          sed -i "s/^appVersion: .*/appVersion: \"$NEW_VERSION\"/" helm/venue-booking/Chart.yaml
+          sed -i "s/^version: .*/version: $NEW_VERSION/" charts/venue-booking/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"$NEW_VERSION\"/" charts/venue-booking/Chart.yaml
 
       - name: Commit version bump
         run: |
-          git add package.json helm/venue-booking/Chart.yaml
+          git add package.json charts/venue-booking/Chart.yaml
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
           git tag "v${{ steps.version.outputs.new_version }}"
 

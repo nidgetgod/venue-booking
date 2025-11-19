@@ -59,7 +59,7 @@ docs/
 azure-pipelines.yml
 
 # Kubernetes & Helm
-helm/
+charts/
 argocd/
 k8s/
 kubernetes/

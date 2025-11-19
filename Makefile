@@ -7,8 +7,8 @@ VERSION ?= $(shell node -p "require('./package.json').version")
 IMAGE_TAG = $(REGISTRY)/$(IMAGE_NAME):v$(VERSION)
 HELM_RELEASE = venue-booking
 NAMESPACE = venue-booking
-HELM_CHART_DIR = helm/venue-booking
-HELM_PACKAGE_DIR = helm/packages
+HELM_CHART_DIR = charts/venue-booking
+HELM_PACKAGE_DIR = charts/packages
 
 help: ## Display this help message
 	@echo "Available commands:"
@@ -39,11 +39,11 @@ test-image: ## Test Docker image
 
 helm-lint: ## Lint Helm chart
 	@echo "Linting Helm chart..."
-	helm lint helm/venue-booking
+	helm lint charts/venue-booking
 
 helm-template: ## Render Helm templates
 	@echo "Rendering Helm templates..."
-	helm template $(HELM_RELEASE) helm/venue-booking --namespace $(NAMESPACE)
+	helm template $(HELM_RELEASE) charts/venue-booking --namespace $(NAMESPACE)
 
 helm-install: ## Install Helm chart
 	@echo "Installing Helm chart..."
@@ -112,7 +112,7 @@ helm-package: ## Package Helm chart
 	@mkdir -p $(HELM_PACKAGE_DIR)
 	@helm package $(HELM_CHART_DIR) -d $(HELM_PACKAGE_DIR)
 	@echo "Updating Helm repository index..."
-	@helm repo index $(HELM_PACKAGE_DIR) --url https://nidgetgod.github.io/venue-booking/helm/packages
+	@helm repo index $(HELM_PACKAGE_DIR) --url https://nidgetgod.github.io/venue-booking/charts/packages
 	@echo "Helm chart packaged successfully!"
 
 version-release: build push helm-package ## Complete version release workflow (build image, push, package helm chart)

@@ -32,17 +32,17 @@ jobs:
 
       - name: Package Helm Chart
         run: |
-          helm dependency update helm/${{ env.CHART_NAME }}
-          helm package helm/${{ env.CHART_NAME }}
+          helm dependency update charts/${{ env.CHART_NAME }}
+          helm package charts/${{ env.CHART_NAME }}
 
       - name: Push Chart to GHCR
         run: |
-          CHART_VERSION=$(grep '^version:' helm/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
+          CHART_VERSION=$(grep '^version:' charts/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
           helm push ${{ env.CHART_NAME }}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
 
       - name: Summary
         run: |
-          CHART_VERSION=$(grep '^version:' helm/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
+          CHART_VERSION=$(grep '^version:' charts/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
           echo "## 🎉 Helm Chart Released" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Chart:** ${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY

@@ -159,7 +159,7 @@ For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ```bash
 # Install with Helm
-helm install venue-booking ./helm/venue-booking \
+helm install venue-booking ./charts/venue-booking \
   --namespace venue-booking \
   --create-namespace
 
@@ -211,7 +211,7 @@ venue-booking/
 │   ├── hooks/            # Custom React hooks
 │   ├── lib/              # Libraries and utilities
 │   └── utils/            # Utility functions
-├── helm/                 # Helm charts
+├── charts/               # Helm charts
 │   └── venue-booking/
 ├── database/             # Database schemas
 ├── .github/              # GitHub Actions workflows

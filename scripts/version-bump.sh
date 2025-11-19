@@ -55,22 +55,22 @@ else
 fi
 
 # Update Chart.yaml
-print_info "Updating helm/venue-booking/Chart.yaml..."
+print_info "Updating charts/venue-booking/Chart.yaml..."
 sed -i.bak -e "s/^version: .*/version: ${NEW_VERSION}/" \
            -e "s/^appVersion: .*/appVersion: \"${NEW_VERSION}\"/" \
-           helm/venue-booking/Chart.yaml && rm helm/venue-booking/Chart.yaml.bak
+           charts/venue-booking/Chart.yaml && rm charts/venue-booking/Chart.yaml.bak
 
 # Update values.yaml image tag
-print_info "Updating helm/venue-booking/values.yaml..."
-sed -i.bak "s/tag: \"v.*\"/tag: \"v${NEW_VERSION}\"/" helm/venue-booking/values.yaml && rm helm/venue-booking/values.yaml.bak
+print_info "Updating charts/venue-booking/values.yaml..."
+sed -i.bak "s/tag: \"v.*\"/tag: \"v${NEW_VERSION}\"/" charts/venue-booking/values.yaml && rm charts/venue-booking/values.yaml.bak
 
 # Verify changes
 print_info "Verifying changes..."
 echo ""
-echo "package.json version: $(node -p "require('./package.json').version")"
-echo "Chart.yaml version: $(grep '^version:' helm/venue-booking/Chart.yaml | awk '{print $2}')"
-echo "Chart.yaml appVersion: $(grep '^appVersion:' helm/venue-booking/Chart.yaml | awk '{print $2}')"
-echo "values.yaml image.tag: $(grep 'tag:' helm/venue-booking/values.yaml | grep -v '#' | awk '{print $2}')"
+echo "package.json version: $(node -p \"require('./package.json').version\")"
+echo "Chart.yaml version: $(grep '^version:' charts/venue-booking/Chart.yaml | awk '{print $2}')"
+echo "Chart.yaml appVersion: $(grep '^appVersion:' charts/venue-booking/Chart.yaml | awk '{print $2}')"
+echo "values.yaml image.tag: $(grep 'tag:' charts/venue-booking/values.yaml | grep -v '#' | awk '{print $2}')"
 echo ""
 
 print_info "Version bump complete! ✅"
