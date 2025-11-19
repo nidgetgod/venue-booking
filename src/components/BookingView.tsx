@@ -3,7 +3,6 @@
 import React from 'react';
 import { User, Clock, Check, Calendar as CalendarIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useLocale } from '@/i18n';
 import { getLegendItems } from '@/constants/calendar';
 import { getTodayString } from '@/utils/timeSlotUtils';
 import BookingForm from './BookingForm';
@@ -48,7 +47,6 @@ const BookingView: React.FC<BookingViewProps> = ({
   bookingForm,
   lastBookingInfo,
   setBookingForm,
-  setLastBookingInfo,
   selectedDate,
   selectedTime,
   selectedTimes,
@@ -70,7 +68,7 @@ const BookingView: React.FC<BookingViewProps> = ({
   const tBooking = useTranslations('booking');
   
   const isToday = selectedDate === getTodayString();
-  const legendItems = getLegendItems((key: string) => tCalendar(key as any));
+  const legendItems = getLegendItems((key: string) => tCalendar(key as 'available' | 'booked' | 'selected'));
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -84,7 +82,6 @@ const BookingView: React.FC<BookingViewProps> = ({
           bookingForm={bookingForm}
           lastBookingInfo={lastBookingInfo}
           setBookingForm={setBookingForm}
-          setLastBookingInfo={setLastBookingInfo}
         />
         <SelectedTimeDisplay 
           selectedDate={selectedDate} 

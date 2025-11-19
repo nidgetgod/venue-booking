@@ -9,6 +9,8 @@ describe('BookingView', () => {
     setLastBookingInfo: jest.fn(),
     selectedDate: '2025-11-20',
     selectedTime: '',
+    selectedTimes: [],
+    setSelectedTimes: jest.fn(),
     currentMonth: new Date('2025-11-20'),
     weekDays: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: [

@@ -35,7 +35,7 @@ export const useBookings = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const createBooking = useCallback(
     async (bookingData: {
@@ -69,7 +69,7 @@ export const useBookings = () => {
         setLoading(false);
       }
     },
-    [fetchBookings]
+    [fetchBookings, t]
   );
 
   const createBatchBooking = useCallback(
@@ -115,7 +115,7 @@ export const useBookings = () => {
         setLoading(false);
       }
     },
-    [fetchBookings]
+    [fetchBookings, t]
   );
 
   const deleteBooking = useCallback(
@@ -140,7 +140,7 @@ export const useBookings = () => {
         setLoading(false);
       }
     },
-    [fetchBookings]
+    [fetchBookings, t]
   );
 
   const isTimeSlotBooked = useCallback(

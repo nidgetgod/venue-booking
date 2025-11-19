@@ -93,14 +93,14 @@ const VenueBookingApp: React.FC = () => {
       const { validateBookingForm } = await import('@/utils/formValidation');
       const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTimes[0]);
       if (missingFields.length > 0) {
-        const translatedFields = missingFields.map(field => tFields(field as any)).join('、');
+        const translatedFields = missingFields.map(field => tFields(field as 'name' | 'phone' | 'peopleCount' | 'date' | 'time')).join('、');
         bookingActions.showDialogMessage(`${tMessages('missingFields')}：${translatedFields}`, 'error');
         return;
       }
       
       // 逐個預約每個時段
       let successCount = 0;
-      let failedTimes: string[] = [];
+      const failedTimes: string[] = [];
       
       for (const time of selectedTimes) {
         const result = await createBooking({

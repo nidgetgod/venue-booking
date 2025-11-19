@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { IntlProvider } from 'next-intl';
 import zhTW from './locales/zh-TW';
 import enUS from './locales/en-US';
@@ -20,15 +20,15 @@ interface LocaleContextType {
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>('zh-TW');
-
-  // Load locale from localStorage on mount
-  useEffect(() => {
-    const savedLocale = localStorage.getItem('locale') as Locale;
-    if (savedLocale && (savedLocale === 'zh-TW' || savedLocale === 'en-US')) {
-      setLocaleState(savedLocale);
+  const [locale, setLocaleState] = useState<Locale>(() => {
+    if (typeof window !== 'undefined') {
+      const savedLocale = localStorage.getItem('locale') as Locale;
+      if (savedLocale && (savedLocale === 'zh-TW' || savedLocale === 'en-US')) {
+        return savedLocale;
+      }
     }
-  }, []);
+    return 'zh-TW';
+  });
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);

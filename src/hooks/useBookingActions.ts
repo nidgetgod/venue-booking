@@ -63,7 +63,7 @@ export const useBookingActions = (options: BookingActionsOptions) => {
   }> => {
     const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTime);
     if (missingFields.length > 0) {
-      const translatedFields = missingFields.map(field => tFields(field as any)).join('、');
+      const translatedFields = missingFields.map(field => tFields(field as 'name' | 'phone' | 'peopleCount' | 'date' | 'time')).join('、');
       showDialogMessage(`${tMessages('missingFields')}：${translatedFields}`, 'error');
       return { success: false, shouldResetForm: false };
     }
@@ -106,7 +106,7 @@ export const useBookingActions = (options: BookingActionsOptions) => {
   ): boolean => {
     const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTime);
     if (missingFields.length > 0) {
-      const translatedFields = missingFields.map(field => tFields(field as any)).join('、');
+      const translatedFields = missingFields.map(field => tFields(field as 'name' | 'phone' | 'peopleCount' | 'date' | 'time')).join('、');
       showDialogMessage(`${tMessages('missingFields')}：${translatedFields}`, 'error');
       return false;
     }

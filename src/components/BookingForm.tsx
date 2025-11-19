@@ -16,10 +16,9 @@ interface BookingFormProps {
     peopleCount: string;
   };
   setBookingForm: (form: { name: string; phone: string; peopleCount: string }) => void;
-  setLastBookingInfo: (info: { name: string; phone: string; peopleCount: string }) => void;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo, setBookingForm, setLastBookingInfo }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo, setBookingForm }) => {
   const t = useTranslations('form');
 
   return (
