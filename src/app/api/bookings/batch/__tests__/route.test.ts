@@ -51,7 +51,8 @@ describe('POST /api/bookings/batch', () => {
           expect.objectContaining({ id: '3' }),
         ]),
         conflicts: [],
-        message: expect.stringContaining('成功預約 3 個時段'),
+        successCount: 3,
+        conflictCount: 0,
       }),
       { status: 201 }
     );
@@ -87,7 +88,8 @@ describe('POST /api/bookings/batch', () => {
           expect.objectContaining({ id: '3' }),
         ]),
         conflicts: ['2025-11-27'],
-        message: expect.stringContaining('成功預約 2 個時段'),
+        successCount: 2,
+        conflictCount: 1,
       }),
       { status: 201 }
     );
@@ -116,7 +118,8 @@ describe('POST /api/bookings/batch', () => {
       expect.objectContaining({
         success: [],
         conflicts: ['2025-11-20', '2025-11-27'],
-        message: expect.stringContaining('成功預約 0 個時段'),
+        successCount: 0,
+        conflictCount: 2,
       }),
       { status: 201 }
     );

@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { useBookings } from '@/hooks/useBookings';
 import { useCalendar } from '@/hooks/useCalendar';
 import { useBookingActions } from '@/hooks/useBookingActions';
 import { generateTimeSlots, getTodayString } from '@/utils/timeSlotUtils';
-import { WEEK_DAYS } from '@/constants/calendar';
+import { WEEK_DAYS_ZH, WEEK_DAYS_EN } from '@/constants/calendar';
+import { useLocale } from '@/i18n';
 import NavigationHeader from './NavigationHeader';
 import BookingView from './BookingView';
 import RecordsView from './RecordsView';
@@ -14,12 +16,17 @@ import CancelDialog from './CancelDialog';
 import RecurringModal from './RecurringModal';
 
 const VenueBookingApp: React.FC = () => {
+  const { locale } = useLocale();
+  const tMessages = useTranslations('messages');
+  const tFields = useTranslations('fields');
+  
   // View state
   const [currentView, setCurrentView] = useState<'booking' | 'calendar'>('booking');
 
   // Form state - Initialize selectedDate with today's date
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const [selectedTime, setSelectedTime] = useState('');
+  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
   
   // Load last booking info from localStorage on mount
   const getInitialBookingInfo = () => {
@@ -65,6 +72,7 @@ const VenueBookingApp: React.FC = () => {
 
   // Memoized values
   const timeSlots = useMemo(() => generateTimeSlots(selectedDate), [selectedDate]);
+  const weekDays = useMemo(() => locale === 'zh-TW' ? WEEK_DAYS_ZH : WEEK_DAYS_EN, [locale]);
 
   const hasAvailableSlots = (dateStr: string): boolean => {
     const slots = generateTimeSlots(dateStr);
@@ -75,9 +83,69 @@ const VenueBookingApp: React.FC = () => {
   const handleDateSelect = (dateStr: string) => {
     setSelectedDate(dateStr);
     setSelectedTime('');
+    setSelectedTimes([]);
   };
 
   const handleBookingSubmit = async (isRecurring = false, weeks = 1) => {
+    // 如果有多選時段（包括單個時段），需要逐個預約
+    if (selectedTimes.length >= 1 && !isRecurring) {
+      // 檢查表單
+      const { validateBookingForm } = await import('@/utils/formValidation');
+      const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTimes[0]);
+      if (missingFields.length > 0) {
+        const translatedFields = missingFields.map(field => tFields(field as 'name' | 'phone' | 'peopleCount' | 'date' | 'time')).join('、');
+        bookingActions.showDialogMessage(`${tMessages('missingFields')}：${translatedFields}`, 'error');
+        return;
+      }
+      
+      // 逐個預約每個時段
+      let successCount = 0;
+      const failedTimes: string[] = [];
+      
+      for (const time of selectedTimes) {
+        const result = await createBooking({
+          date: selectedDate,
+          time: time,
+          name: bookingForm.name,
+          phone: bookingForm.phone,
+          peopleCount: bookingForm.peopleCount,
+          isRecurring: false,
+        });
+        
+        if (result.success) {
+          successCount++;
+        } else {
+          failedTimes.push(time);
+        }
+      }
+      
+      if (successCount > 0) {
+        setLastBookingInfo({
+          name: bookingForm.name,
+          phone: bookingForm.phone,
+          peopleCount: bookingForm.peopleCount,
+        });
+        setSelectedDate('');
+        setSelectedTime('');
+        setSelectedTimes([]);
+        
+        // 單個時段成功，使用簡單訊息
+        if (selectedTimes.length === 1 && failedTimes.length === 0) {
+          bookingActions.showDialogMessage(tMessages('bookingSuccess'), 'success');
+        } else {
+          const message = failedTimes.length > 0
+            ? tMessages('multiSlotSuccessWithFailures', { successCount, failedTimes: failedTimes.join('、') })
+            : tMessages('multiSlotSuccess', { count: successCount });
+          bookingActions.showDialogMessage(message, 'success');
+        }
+      } else {
+        bookingActions.showDialogMessage(tMessages('bookingFailed'), 'error');
+      }
+      
+      return;
+    }
+    
+    // 連續預約（使用 selectedTime）
     const result = await bookingActions.handleBookingSubmit(
       bookingForm,
       selectedDate,
@@ -97,6 +165,7 @@ const VenueBookingApp: React.FC = () => {
       // Reset time selection (keep personal info)
       setSelectedDate('');
       setSelectedTime('');
+      setSelectedTimes([]);
       setRecurringWeeks(1);
     }
   };
@@ -118,7 +187,7 @@ const VenueBookingApp: React.FC = () => {
           selectedDate={selectedDate}
           selectedTime={selectedTime}
           currentMonth={currentMonth}
-          weekDays={WEEK_DAYS}
+          weekDays={weekDays}
           calendarDays={calendarDays}
           handleDateSelect={handleDateSelect}
           navigateMonth={navigateMonth}
@@ -126,6 +195,8 @@ const VenueBookingApp: React.FC = () => {
           timeSlots={timeSlots}
           isTimeSlotBooked={isTimeSlotBooked}
           setSelectedTime={setSelectedTime}
+          selectedTimes={selectedTimes}
+          setSelectedTimes={setSelectedTimes}
           handleBookingSubmit={handleBookingSubmit}
           handleRecurringClick={handleRecurringClick}
         />

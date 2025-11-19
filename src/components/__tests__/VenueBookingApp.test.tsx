@@ -64,32 +64,32 @@ describe('VenueBookingApp', () => {
   it('應該初始化並渲染預約視圖', () => {
     render(<VenueBookingApp />);
     
-    expect(screen.getByText('預約租借')).toBeInTheDocument();
+    expect(screen.getByText('booking')).toBeInTheDocument();
     expect(mockFetchBookings).toHaveBeenCalled();
   });
 
   it('應該切換到紀錄視圖', () => {
     render(<VenueBookingApp />);
     
-    const recordsButton = screen.getByText('預約記錄');
+    const recordsButton = screen.getByText('records');
     fireEvent.click(recordsButton);
     
     // 檢查是否能看到「暫無預約記錄」文字（因為bookings是空的）
-    expect(screen.getByText('暫無預約記錄')).toBeInTheDocument();
+    expect(screen.getByText('empty')).toBeInTheDocument();
   });
 
   it('應該渲染預約表單欄位', () => {
     render(<VenueBookingApp />);
     
-    expect(screen.getByPlaceholderText('請輸入姓名')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('請輸入電話號碼')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('請輸入使用人數')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('namePlaceholder')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('phonePlaceholder')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('peopleCountPlaceholder')).toBeInTheDocument();
   });
 
   it('應該顯示連續預約按鈕', () => {
     render(<VenueBookingApp />);
     
-    expect(screen.getByText('連續預約')).toBeInTheDocument();
+    expect(screen.getByText('recurringBook')).toBeInTheDocument();
   });
 
   it('應該渲染日曆', () => {
@@ -103,9 +103,9 @@ describe('VenueBookingApp', () => {
   it('應該處理表單輸入', () => {
     render(<VenueBookingApp />);
     
-    const nameInput = screen.getByPlaceholderText('請輸入姓名');
-    const phoneInput = screen.getByPlaceholderText('請輸入電話號碼');
-    const peopleInput = screen.getByPlaceholderText('請輸入使用人數');
+    const nameInput = screen.getByPlaceholderText('namePlaceholder');
+    const phoneInput = screen.getByPlaceholderText('phonePlaceholder');
+    const peopleInput = screen.getByPlaceholderText('peopleCountPlaceholder');
     
     fireEvent.change(nameInput, { target: { value: '張三' } });
     fireEvent.change(phoneInput, { target: { value: '0912345678' } });
@@ -140,9 +140,9 @@ describe('VenueBookingApp', () => {
     render(<VenueBookingApp />);
     
     // 填寫表單
-    const nameInput = screen.getByPlaceholderText('請輸入姓名');
-    const phoneInput = screen.getByPlaceholderText('請輸入電話號碼');
-    const peopleInput = screen.getByPlaceholderText('請輸入使用人數');
+    const nameInput = screen.getByPlaceholderText('namePlaceholder');
+    const phoneInput = screen.getByPlaceholderText('phonePlaceholder');
+    const peopleInput = screen.getByPlaceholderText('peopleCountPlaceholder');
     
     fireEvent.change(nameInput, { target: { value: '張三' } });
     fireEvent.change(phoneInput, { target: { value: '0912345678' } });
@@ -162,35 +162,35 @@ describe('VenueBookingApp', () => {
     render(<VenueBookingApp />);
     
     // 只測試表單填寫
-    fireEvent.change(screen.getByPlaceholderText('請輸入姓名'), { 
+    fireEvent.change(screen.getByPlaceholderText('namePlaceholder'), { 
       target: { value: '張三' } 
     });
-    fireEvent.change(screen.getByPlaceholderText('請輸入電話號碼'), { 
+    fireEvent.change(screen.getByPlaceholderText('phonePlaceholder'), { 
       target: { value: '0912345678' } 
     });
-    fireEvent.change(screen.getByPlaceholderText('請輸入使用人數'), { 
+    fireEvent.change(screen.getByPlaceholderText('peopleCountPlaceholder'), { 
       target: { value: '4' } 
     });
     
-    expect(screen.getByPlaceholderText('請輸入姓名')).toHaveValue('張三');
+    expect(screen.getByPlaceholderText('namePlaceholder')).toHaveValue('張三');
   });
 
   it('應該開啟連續預約對話框', async () => {
     render(<VenueBookingApp />);
     
     // 填寫表單
-    fireEvent.change(screen.getByPlaceholderText('請輸入姓名'), { 
+    fireEvent.change(screen.getByPlaceholderText('namePlaceholder'), { 
       target: { value: '張三' } 
     });
-    fireEvent.change(screen.getByPlaceholderText('請輸入電話號碼'), { 
+    fireEvent.change(screen.getByPlaceholderText('phonePlaceholder'), { 
       target: { value: '0912345678' } 
     });
-    fireEvent.change(screen.getByPlaceholderText('請輸入使用人數'), { 
+    fireEvent.change(screen.getByPlaceholderText('peopleCountPlaceholder'), { 
       target: { value: '4' } 
     });
     
     // 檢查連續預約按鈕存在
-    expect(screen.getByText('連續預約')).toBeInTheDocument();
+    expect(screen.getByText('recurringBook')).toBeInTheDocument();
   });
 
   it('應該提交連續預約', async () => {
@@ -202,11 +202,11 @@ describe('VenueBookingApp', () => {
     render(<VenueBookingApp />);
     
     // 填寫表單並驗證
-    fireEvent.change(screen.getByPlaceholderText('請輸入姓名'), { 
+    fireEvent.change(screen.getByPlaceholderText('namePlaceholder'), { 
       target: { value: '張三' } 
     });
     
-    expect(screen.getByPlaceholderText('請輸入姓名')).toHaveValue('張三');
+    expect(screen.getByPlaceholderText('namePlaceholder')).toHaveValue('張三');
   });
 
   it('應該處理取消預約', async () => {
@@ -242,7 +242,7 @@ describe('VenueBookingApp', () => {
     render(<VenueBookingApp />);
     
     // 切換到預約記錄
-    const recordsButton = screen.getByText('預約記錄');
+    const recordsButton = screen.getByText('records');
     fireEvent.click(recordsButton);
     
     await waitFor(() => {
@@ -289,7 +289,7 @@ describe('VenueBookingApp', () => {
     render(<VenueBookingApp />);
     
     // 切換到預約記錄
-    const recordsButton = screen.getByText('預約記錄');
+    const recordsButton = screen.getByText('records');
     fireEvent.click(recordsButton);
     
     await waitFor(() => {
@@ -307,20 +307,20 @@ describe('VenueBookingApp', () => {
     render(<VenueBookingApp />);
     
     // 填寫表單
-    fireEvent.change(screen.getByPlaceholderText('請輸入姓名'), { 
+    fireEvent.change(screen.getByPlaceholderText('namePlaceholder'), { 
       target: { value: '張三' } 
     });
-    fireEvent.change(screen.getByPlaceholderText('請輸入電話號碼'), { 
+    fireEvent.change(screen.getByPlaceholderText('phonePlaceholder'), { 
       target: { value: '0912345678' } 
     });
-    fireEvent.change(screen.getByPlaceholderText('請輸入使用人數'), { 
+    fireEvent.change(screen.getByPlaceholderText('peopleCountPlaceholder'), { 
       target: { value: '4' } 
     });
     
     // 驗證表單值
-    const nameInput = screen.getByPlaceholderText('請輸入姓名');
-    const phoneInput = screen.getByPlaceholderText('請輸入電話號碼');
-    const peopleInput = screen.getByPlaceholderText('請輸入使用人數');
+    const nameInput = screen.getByPlaceholderText('namePlaceholder');
+    const phoneInput = screen.getByPlaceholderText('phonePlaceholder');
+    const peopleInput = screen.getByPlaceholderText('peopleCountPlaceholder');
     
     expect(nameInput).toHaveValue('張三');
     expect(phoneInput).toHaveValue('0912345678');

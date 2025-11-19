@@ -39,7 +39,7 @@ describe('BookingRecords', () => {
 
   it('renders empty state when no bookings', () => {
     render(<BookingRecords bookings={[]} cancelBooking={mockCancelBooking} />);
-    expect(screen.getByText('暫無預約記錄')).toBeInTheDocument();
+    expect(screen.getByText('empty')).toBeInTheDocument();
   });
 
   it('has cancel buttons for each booking', () => {

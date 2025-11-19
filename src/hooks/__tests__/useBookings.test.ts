@@ -54,7 +54,7 @@ describe('useBookings', () => {
       });
 
       await waitFor(() => {
-        expect(result.current.error).toBe('讀取預約資料失敗');
+        expect(result.current.error).toBe('fetchError');
         expect(result.current.loading).toBe(false);
       });
     });
@@ -65,7 +65,7 @@ describe('useBookings', () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ message: '預約成功' }),
+          json: async () => ({ message: 'success' }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -88,7 +88,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: true,
-        message: '已完成預約，可在預約紀錄裡查詢',
+        message: 'bookingSuccess',
       });
     });
 
@@ -124,7 +124,7 @@ describe('useBookings', () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ message: '取消成功' }),
+          json: async () => ({ message: 'cancelSuccess' }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -140,7 +140,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: true,
-        message: '預約已成功取消',
+        message: 'cancelSuccess',
       });
     });
 
@@ -158,7 +158,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: false,
-        message: '取消預約失敗',
+        message: 'cancelFailed',
       });
     });
 
@@ -174,7 +174,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: false,
-        message: '取消預約失敗，請稍後再試',
+        message: 'cancelError',
       });
     });
   });
@@ -184,7 +184,7 @@ describe('useBookings', () => {
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ message: '已成功建立 3 筆預約' }),
+          json: async () => ({ message: 'batchBookingSuccess' }),
         })
         .mockResolvedValueOnce({
           ok: true,
@@ -206,7 +206,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: true,
-        message: '已成功建立 3 筆預約',
+        message: 'batchBookingSuccess',
       });
     });
 
@@ -253,7 +253,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: false,
-        message: '預約失敗，請稍後再試',
+        message: 'bookingError',
       });
     });
   });
@@ -365,7 +365,7 @@ describe('useBookings', () => {
       });
 
       await waitFor(() => {
-        expect(result.current.error).toBe('讀取預約資料失敗，請稍後再試');
+        expect(result.current.error).toBe('fetchErrorRetry');
         expect(result.current.loading).toBe(false);
       });
 
@@ -392,7 +392,7 @@ describe('useBookings', () => {
 
       expect(response).toEqual({
         success: false,
-        message: '預約失敗，請稍後再試',
+        message: 'bookingError',
       });
 
       consoleErrorSpy.mockRestore();

@@ -15,7 +15,6 @@ describe('CalendarSelector', () => {
       isSelected: true,
     },
   ];
-  const mockSelectedDate = '2025-11-20';
   const mockHandleDateSelect = jest.fn();
   const mockNavigateMonth = jest.fn();
   const mockHasAvailableSlots = jest.fn(() => true);

@@ -9,6 +9,8 @@ describe('BookingView', () => {
     setLastBookingInfo: jest.fn(),
     selectedDate: '2025-11-20',
     selectedTime: '',
+    selectedTimes: [],
+    setSelectedTimes: jest.fn(),
     currentMonth: new Date('2025-11-20'),
     weekDays: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: [
@@ -34,7 +36,7 @@ describe('BookingView', () => {
 
   it('renders booking form section', () => {
     render(<BookingView {...mockProps} />);
-    expect(screen.getByText('租借人資訊')).toBeInTheDocument();
+    expect(screen.getByText('userInfo')).toBeInTheDocument();
   });
 
   it('renders calendar selector', () => {
@@ -44,16 +46,11 @@ describe('BookingView', () => {
 
   it('renders date and time selection heading', () => {
     render(<BookingView {...mockProps} />);
-    expect(screen.getByText('選擇日期時段')).toBeInTheDocument();
+    expect(screen.getByText('selectDateTime')).toBeInTheDocument();
   });
 
-  it('renders venue rules', () => {
+  it('renders venue announcement', () => {
     render(<BookingView {...mockProps} />);
-    expect(screen.getByText('📋 場地使用規則')).toBeInTheDocument();
-  });
-
-  it('renders venue pricing', () => {
-    render(<BookingView {...mockProps} />);
-    expect(screen.getByText('💰 場地費用')).toBeInTheDocument();
+    expect(screen.getByText(/title/)).toBeInTheDocument();
   });
 });

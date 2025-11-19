@@ -1,4 +1,8 @@
+'use client';
+
 import React from 'react';
+import { IMaskInput } from 'react-imask';
+import { useTranslations } from 'next-intl';
 
 interface BookingFormProps {
   bookingForm: {
@@ -12,17 +16,18 @@ interface BookingFormProps {
     peopleCount: string;
   };
   setBookingForm: (form: { name: string; phone: string; peopleCount: string }) => void;
-  setLastBookingInfo: (info: { name: string; phone: string; peopleCount: string }) => void;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo, setBookingForm, setLastBookingInfo }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo, setBookingForm }) => {
+  const t = useTranslations('form');
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-600 mb-2">
-          姓名
+          {t('name')}
           {lastBookingInfo.name && (
-            <span className="text-xs text-green-600 ml-2">✓ 自動帶入上次資料</span>
+            <span className="text-xs text-green-600 ml-2">✓ {t('useLastInfo')}</span>
           )}
         </label>
         <input
@@ -30,29 +35,30 @@ const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo,
           value={bookingForm.name}
           onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="請輸入姓名"
+          placeholder={t('namePlaceholder')}
         />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-600 mb-2">
-          電話
+          {t('phone')}
           {lastBookingInfo.phone && (
-            <span className="text-xs text-green-600 ml-2">✓ 自動帶入上次資料</span>
+            <span className="text-xs text-green-600 ml-2">✓ {t('useLastInfo')}</span>
           )}
         </label>
-        <input
-          type="tel"
+        <IMaskInput
+          mask="0000-000-000"
           value={bookingForm.phone}
-          onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
+          onAccept={(value) => setBookingForm({ ...bookingForm, phone: value })}
+          type="tel"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="請輸入電話號碼"
+          placeholder={t('phonePlaceholder')}
         />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-600 mb-2">
-          人數
+          {t('peopleCount')}
           {lastBookingInfo.peopleCount && (
-            <span className="text-xs text-green-600 ml-2">✓ 自動帶入上次資料</span>
+            <span className="text-xs text-green-600 ml-2">✓ {t('useLastInfo')}</span>
           )}
         </label>
         <input
@@ -61,21 +67,9 @@ const BookingForm: React.FC<BookingFormProps> = ({ bookingForm, lastBookingInfo,
           value={bookingForm.peopleCount}
           onChange={(e) => setBookingForm({ ...bookingForm, peopleCount: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="請輸入使用人數"
+          placeholder={t('peopleCountPlaceholder')}
         />
       </div>
-      {(lastBookingInfo.name || lastBookingInfo.phone || lastBookingInfo.peopleCount) && (
-        <button
-          type="button"
-          onClick={() => {
-            setBookingForm({ name: '', phone: '', peopleCount: '' });
-            setLastBookingInfo({ name: '', phone: '', peopleCount: '' });
-          }}
-          className="text-sm text-gray-500 hover:text-gray-700 underline"
-        >
-          清除自動填入資料
-        </button>
-      )}
     </div>
   );
 };

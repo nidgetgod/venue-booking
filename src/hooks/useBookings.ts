@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface Booking {
   id: number;
@@ -12,6 +13,7 @@ interface Booking {
 }
 
 export const useBookings = () => {
+  const t = useTranslations('messages');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,15 +27,15 @@ export const useBookings = () => {
         const data = await response.json();
         setBookings(data);
       } else {
-        setError('讀取預約資料失敗');
+        setError(t('fetchError'));
       }
     } catch (err) {
       console.error('Failed to fetch bookings:', err);
-      setError('讀取預約資料失敗，請稍後再試');
+      setError(t('fetchErrorRetry'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const createBooking = useCallback(
     async (bookingData: {
@@ -55,19 +57,19 @@ export const useBookings = () => {
 
         if (response.ok) {
           await fetchBookings();
-          return { success: true, message: '已完成預約，可在預約紀錄裡查詢' };
+          return { success: true, message: t('bookingSuccess') };
         } else {
           const data = await response.json();
-          return { success: false, message: data.error || '預約失敗' };
+          return { success: false, message: data.error || t('bookingFailed') };
         }
       } catch (err) {
         console.error('Booking error:', err);
-        return { success: false, message: '預約失敗，請稍後再試' };
+        return { success: false, message: t('bookingError') };
       } finally {
         setLoading(false);
       }
     },
-    [fetchBookings]
+    [fetchBookings, t]
   );
 
   const createBatchBooking = useCallback(
@@ -90,18 +92,30 @@ export const useBookings = () => {
         const data = await response.json();
         if (response.ok) {
           await fetchBookings();
-          return { success: true, message: data.message };
+          const { successCount, conflictCount, conflicts } = data;
+          let message = '';
+          if (conflictCount > 0) {
+            const conflictDates = conflicts.map((date: string) => `${date} ${bookingData.time}`).join('、');
+            message = t('batchBookingSuccessWithConflicts', { 
+              successCount, 
+              conflictCount, 
+              datesTimes: conflictDates 
+            });
+          } else {
+            message = t('batchBookingSuccess', { count: successCount });
+          }
+          return { success: true, message };
         } else {
-          return { success: false, message: data.error || '預約失敗' };
+          return { success: false, message: data.error || t('bookingFailed') };
         }
       } catch (err) {
         console.error('Batch booking error:', err);
-        return { success: false, message: '預約失敗，請稍後再試' };
+        return { success: false, message: t('bookingError') };
       } finally {
         setLoading(false);
       }
     },
-    [fetchBookings]
+    [fetchBookings, t]
   );
 
   const deleteBooking = useCallback(
@@ -115,18 +129,18 @@ export const useBookings = () => {
 
         if (response.ok) {
           await fetchBookings();
-          return { success: true, message: '預約已成功取消' };
+          return { success: true, message: t('cancelSuccess') };
         } else {
-          return { success: false, message: '取消預約失敗' };
+          return { success: false, message: t('cancelFailed') };
         }
       } catch (err) {
         console.error('Cancel booking error:', err);
-        return { success: false, message: '取消預約失敗，請稍後再試' };
+        return { success: false, message: t('cancelError') };
       } finally {
         setLoading(false);
       }
     },
-    [fetchBookings]
+    [fetchBookings, t]
   );
 
   const isTimeSlotBooked = useCallback(
