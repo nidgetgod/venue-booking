@@ -1,13 +1,16 @@
+'use client';
+
 import React from 'react';
 import { User, Clock, Check, Calendar as CalendarIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from '@/i18n';
+import { getLegendItems } from '@/constants/calendar';
+import { getTodayString } from '@/utils/timeSlotUtils';
 import BookingForm from './BookingForm';
 import SelectedTimeDisplay from './SelectedTimeDisplay';
-import VenueRules from './VenueRules';
-import VenuePricing from './VenuePricing';
+import VenueAnnouncement from './VenueAnnouncement';
 import CalendarSelector from './CalendarSelector';
 import TimeSlotSelector from './TimeSlotSelector';
-import { LEGEND_ITEMS } from '@/constants/calendar';
-import { getTodayString } from '@/utils/timeSlotUtils';
 
 interface CalendarDay {
   date: Date;
@@ -26,6 +29,8 @@ interface BookingViewProps {
   setLastBookingInfo: (info: { name: string; phone: string; peopleCount: string }) => void;
   selectedDate: string;
   selectedTime: string;
+  selectedTimes: string[];
+  setSelectedTimes: (times: string[]) => void;
   currentMonth: Date;
   weekDays: string[];
   calendarDays: CalendarDay[];
@@ -46,6 +51,8 @@ const BookingView: React.FC<BookingViewProps> = ({
   setLastBookingInfo,
   selectedDate,
   selectedTime,
+  selectedTimes,
+  setSelectedTimes,
   currentMonth,
   weekDays,
   calendarDays,
@@ -58,7 +65,12 @@ const BookingView: React.FC<BookingViewProps> = ({
   handleBookingSubmit,
   handleRecurringClick,
 }) => {
+  const tForm = useTranslations('form');
+  const tCalendar = useTranslations('calendar');
+  const tBooking = useTranslations('booking');
+  
   const isToday = selectedDate === getTodayString();
+  const legendItems = getLegendItems((key: string) => tCalendar(key as any));
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
@@ -66,7 +78,7 @@ const BookingView: React.FC<BookingViewProps> = ({
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
           <User size={20} />
-          租借人資訊
+          {tForm('userInfo')}
         </h2>
         <BookingForm
           bookingForm={bookingForm}
@@ -74,16 +86,19 @@ const BookingView: React.FC<BookingViewProps> = ({
           setBookingForm={setBookingForm}
           setLastBookingInfo={setLastBookingInfo}
         />
-        <SelectedTimeDisplay selectedDate={selectedDate} selectedTime={selectedTime} />
-        <VenueRules />
-        <VenuePricing />
+        <SelectedTimeDisplay 
+          selectedDate={selectedDate} 
+          selectedTime={selectedTime}
+          selectedTimes={selectedTimes}
+        />
+        <VenueAnnouncement />
       </div>
 
       {/* 右側：日曆時段選擇 */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
           <Clock size={20} />
-          選擇日期時段
+          {tCalendar('selectDateTime')}
         </h2>
         <CalendarSelector
           currentMonth={currentMonth}
@@ -99,13 +114,15 @@ const BookingView: React.FC<BookingViewProps> = ({
           timeSlots={timeSlots}
           isTimeSlotBooked={isTimeSlotBooked}
           setSelectedTime={setSelectedTime}
+          selectedTimes={selectedTimes}
+          setSelectedTimes={setSelectedTimes}
         />
 
         {/* 圖例說明 */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h5 className="text-sm font-medium text-gray-700 mb-2">圖例說明</h5>
+          <h5 className="text-sm font-medium text-gray-700 mb-2">{tCalendar('legend')}</h5>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            {LEGEND_ITEMS.map((item, index) => (
+            {legendItems.map((item, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className={`w-3 h-3 ${item.color} rounded`}></div>
                 <span>{item.label}</span>
@@ -114,7 +131,7 @@ const BookingView: React.FC<BookingViewProps> = ({
           </div>
           {isToday && (
             <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-              💡 已自動選擇今天，您可以直接選擇時段進行預約
+              {tCalendar('autoSelectToday')}
             </div>
           )}
         </div>
@@ -123,17 +140,17 @@ const BookingView: React.FC<BookingViewProps> = ({
         <div className="flex gap-3 mt-6">
           <button
             onClick={() => handleBookingSubmit(false, 1)}
-            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <Check size={20} />
-            單次預約
+            {tBooking('singleBook')}
           </button>
           <button
             onClick={handleRecurringClick}
-            className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <CalendarIcon size={20} />
-            連續預約
+            {tBooking('recurringBook')}
           </button>
         </div>
       </div>

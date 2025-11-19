@@ -30,8 +30,8 @@ describe('BookingDialog', () => {
         setShowDialog={mockSetShowDialog}
       />
     );
-    expect(screen.getByRole('heading', { name: '預約成功' })).toBeInTheDocument();
-    expect(screen.getByText('預約成功', { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'success' })).toBeInTheDocument();
+    expect(screen.getByText('預約成功')).toBeInTheDocument();
   });
 
   it('renders error dialog with correct content', () => {
@@ -43,7 +43,7 @@ describe('BookingDialog', () => {
         setShowDialog={mockSetShowDialog}
       />
     );
-    expect(screen.getByText('資料不完整')).toBeInTheDocument();
+    expect(screen.getByText('error')).toBeInTheDocument();
     expect(screen.getByText('請填寫必填欄位')).toBeInTheDocument();
   });
 
@@ -56,7 +56,7 @@ describe('BookingDialog', () => {
         setShowDialog={mockSetShowDialog}
       />
     );
-    expect(screen.getByText('取消成功')).toBeInTheDocument();
+    expect(screen.getByText('cancelSuccess')).toBeInTheDocument();
   });
 
   it('calls setShowDialog when confirm button clicked', () => {
@@ -68,7 +68,7 @@ describe('BookingDialog', () => {
         setShowDialog={mockSetShowDialog}
       />
     );
-    const confirmButton = screen.getByText('確定');
+    const confirmButton = screen.getByText('confirm');
     fireEvent.click(confirmButton);
     expect(mockSetShowDialog).toHaveBeenCalledWith(false);
   });
@@ -82,7 +82,7 @@ describe('BookingDialog', () => {
         setShowDialog={mockSetShowDialog}
       />
     );
-    const confirmButton = screen.getByText('確定');
+    const confirmButton = screen.getByText('confirm');
     expect(confirmButton).toHaveClass('bg-green-600');
   });
 
@@ -95,7 +95,7 @@ describe('BookingDialog', () => {
         setShowDialog={mockSetShowDialog}
       />
     );
-    const confirmButton = screen.getByText('確定');
+    const confirmButton = screen.getByText('confirm');
     expect(confirmButton).toHaveClass('bg-red-600');
   });
 });

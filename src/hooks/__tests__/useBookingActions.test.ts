@@ -42,14 +42,14 @@ describe('useBookingActions', () => {
         shouldResetForm: false,
       });
       expect(result.current.dialogType).toBe('error');
-      expect(result.current.dialogMessage).toContain('請填寫以下欄位');
+      expect(result.current.dialogMessage).toContain('missingFields');
       expect(result.current.showDialog).toBe(true);
     });
 
     it('should create single booking successfully', async () => {
       mockCreateBooking.mockResolvedValueOnce({
         success: true,
-        message: '預約成功',
+        message: 'success',
       });
 
       const { result } = renderHook(() => useBookingActions(defaultOptions));
@@ -85,7 +85,7 @@ describe('useBookingActions', () => {
         shouldResetForm: true,
       });
       expect(result.current.dialogType).toBe('success');
-      expect(result.current.dialogMessage).toBe('預約成功');
+      expect(result.current.dialogMessage).toBe('success');
       expect(result.current.showDialog).toBe(true);
       expect(result.current.showRecurringModal).toBe(false);
     });

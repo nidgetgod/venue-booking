@@ -18,7 +18,7 @@ describe('RecordsView', () => {
 
   it('renders records view with title', () => {
     render(<RecordsView bookings={mockBookings} cancelBooking={mockCancelBooking} />);
-    expect(screen.getByText('預約記錄')).toBeInTheDocument();
+    expect(screen.getByText('title')).toBeInTheDocument();
   });
 
   it('renders booking records component', () => {
@@ -28,6 +28,6 @@ describe('RecordsView', () => {
 
   it('renders empty state when no bookings', () => {
     render(<RecordsView bookings={[]} cancelBooking={mockCancelBooking} />);
-    expect(screen.getByText('暫無預約記錄')).toBeInTheDocument();
+    expect(screen.getByText('empty')).toBeInTheDocument();
   });
 });

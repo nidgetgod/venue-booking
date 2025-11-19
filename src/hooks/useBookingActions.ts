@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { validateBookingForm } from '@/utils/formValidation';
 import { generateRecurringDates } from '@/utils/timeSlotUtils';
 
@@ -33,6 +34,8 @@ interface BookingActionsOptions {
 
 export const useBookingActions = (options: BookingActionsOptions) => {
   const { createBooking, createBatchBooking, deleteBooking } = options;
+  const tMessages = useTranslations('messages');
+  const tFields = useTranslations('fields');
 
   // Dialog state
   const [showDialog, setShowDialog] = useState(false);
@@ -60,7 +63,8 @@ export const useBookingActions = (options: BookingActionsOptions) => {
   }> => {
     const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTime);
     if (missingFields.length > 0) {
-      showDialogMessage(`請填寫以下欄位：${missingFields.join('、')}`, 'error');
+      const translatedFields = missingFields.map(field => tFields(field as any)).join('、');
+      showDialogMessage(`${tMessages('missingFields')}：${translatedFields}`, 'error');
       return { success: false, shouldResetForm: false };
     }
 
@@ -102,7 +106,8 @@ export const useBookingActions = (options: BookingActionsOptions) => {
   ): boolean => {
     const missingFields = validateBookingForm(bookingForm, selectedDate, selectedTime);
     if (missingFields.length > 0) {
-      showDialogMessage(`請填寫以下欄位：${missingFields.join('、')}`, 'error');
+      const translatedFields = missingFields.map(field => tFields(field as any)).join('、');
+      showDialogMessage(`${tMessages('missingFields')}：${translatedFields}`, 'error');
       return false;
     }
     setShowRecurringModal(true);
@@ -131,6 +136,7 @@ export const useBookingActions = (options: BookingActionsOptions) => {
     setShowDialog,
     dialogMessage,
     dialogType,
+    showDialogMessage,
     showCancelDialog,
     setShowCancelDialog,
     bookingToCancel,

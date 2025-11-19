@@ -5,17 +5,17 @@ import SelectedTimeDisplay from '@/components/SelectedTimeDisplay';
 describe('SelectedTimeDisplay', () => {
   it('does not render when no date selected', () => {
     render(<SelectedTimeDisplay selectedDate="" selectedTime="10:00-11:00" />);
-    expect(screen.queryByText('已選擇時段')).not.toBeInTheDocument();
+    expect(screen.queryByText('selectedSlot')).not.toBeInTheDocument();
   });
 
   it('does not render when no time selected', () => {
     render(<SelectedTimeDisplay selectedDate="2025-11-16" selectedTime="" />);
-    expect(screen.queryByText('已選擇時段')).not.toBeInTheDocument();
+    expect(screen.queryByText('selectedSlot')).not.toBeInTheDocument();
   });
 
   it('renders when both date and time are selected', () => {
     render(<SelectedTimeDisplay selectedDate="2025-11-16" selectedTime="10:00-11:00" />);
-    expect(screen.getByText('已選擇時段')).toBeInTheDocument();
+    expect(screen.getByText('selectedSlot')).toBeInTheDocument();
   });
 
   it('displays selected time', () => {

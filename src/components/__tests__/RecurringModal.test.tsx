@@ -35,8 +35,8 @@ describe('RecurringModal', () => {
   it('應該顯示對話框標題和內容', () => {
     render(<RecurringModal {...defaultProps} />);
     
-    expect(screen.getByText('連續預約設定')).toBeInTheDocument();
-    expect(screen.getByText(/預約時段/)).toBeInTheDocument();
+    expect(screen.getByText('title')).toBeInTheDocument();
+    expect(screen.getByText(/slot/)).toBeInTheDocument();
   });
 
   it('應該顯示當前選擇的週數', () => {
@@ -44,7 +44,7 @@ describe('RecurringModal', () => {
     
     const weekDisplay = screen.getByText('5', { selector: '.text-2xl.font-bold.text-blue-600' });
     expect(weekDisplay).toBeInTheDocument();
-    expect(screen.getByText(/總共/)).toBeInTheDocument();
+    expect(screen.getByText(/totalBookings/)).toBeInTheDocument();
   });
 
   it('應該能增加週數', () => {
@@ -79,11 +79,11 @@ describe('RecurringModal', () => {
     expect(plusButton).toBeDisabled();
   });
 
-  it('應該顯示預約日期預覽', () => {
+  it('應該顯示preview', () => {
     render(<RecurringModal {...defaultProps} recurringWeeks={2} />);
     
-    expect(screen.getByText('預約日期預覽')).toBeInTheDocument();
-    const availableSlots = screen.getAllByText('✓ 可預約');
+    expect(screen.getByText('preview')).toBeInTheDocument();
+    const availableSlots = screen.getAllByText('available');
     expect(availableSlots).toHaveLength(2);
   });
 
@@ -94,15 +94,15 @@ describe('RecurringModal', () => {
 
     render(<RecurringModal {...defaultProps} recurringWeeks={3} />);
     
-    expect(screen.getByText('✗ 衝突')).toBeInTheDocument();
-    const availableSlots = screen.getAllByText('✓ 可預約');
+    expect(screen.getByText('conflict')).toBeInTheDocument();
+    const availableSlots = screen.getAllByText('available');
     expect(availableSlots).toHaveLength(2); // 只有兩個可用
   });
 
-  it('應該呼叫關閉函數當點擊取消', () => {
+  it('應該呼叫關閉函數當點擊cancel', () => {
     render(<RecurringModal {...defaultProps} />);
     
-    const cancelButton = screen.getByText('取消');
+    const cancelButton = screen.getByText('cancel');
     fireEvent.click(cancelButton);
     
     expect(mockSetShowRecurringModal).toHaveBeenCalledWith(false);
@@ -111,7 +111,7 @@ describe('RecurringModal', () => {
   it('應該呼叫預約提交函數當點擊確認', () => {
     render(<RecurringModal {...defaultProps} recurringWeeks={5} />);
     
-    const confirmButton = screen.getByText('確認預約');
+    const confirmButton = screen.getByText('confirm');
     fireEvent.click(confirmButton);
     
     expect(mockHandleBookingSubmit).toHaveBeenCalledWith(true, 5);
@@ -121,13 +121,13 @@ describe('RecurringModal', () => {
     // 2025-11-20 是星期四
     render(<RecurringModal {...defaultProps} selectedDate="2025-11-20" />);
     
-    expect(screen.getByText(/每週四/)).toBeInTheDocument();
+    expect(screen.getByText(/everyWeek/)).toBeInTheDocument();
   });
 
   it('應該顯示正確的月數估計', () => {
     render(<RecurringModal {...defaultProps} recurringWeeks={8} />);
     
-    expect(screen.getByText(/2 個月/)).toBeInTheDocument();
+    expect(screen.getByText(/2 months/)).toBeInTheDocument();
   });
 
   it('應該正確顯示時段資訊', () => {

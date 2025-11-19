@@ -33,7 +33,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: results,
       conflicts: conflicts,
-      message: `成功預約 ${results.length} 個時段${conflicts.length > 0 ? `，${conflicts.length} 個時段衝突` : ''}`
+      successCount: results.length,
+      conflictCount: conflicts.length
     }, { status: 201 });
   } catch (error) {
     console.error('Database error:', error);

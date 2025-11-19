@@ -15,7 +15,7 @@ describe('NavigationHeader', () => {
         setCurrentView={mockSetCurrentView}
       />
     );
-    expect(screen.getByText('場地租借系統')).toBeInTheDocument();
+    expect(screen.getByText('title')).toBeInTheDocument();
   });
 
   it('highlights booking button when booking view is active', () => {
@@ -25,7 +25,7 @@ describe('NavigationHeader', () => {
         setCurrentView={mockSetCurrentView}
       />
     );
-    const bookingButton = screen.getByText('預約租借');
+    const bookingButton = screen.getByText('booking');
     expect(bookingButton).toHaveClass('bg-blue-600');
   });
 
@@ -36,7 +36,7 @@ describe('NavigationHeader', () => {
         setCurrentView={mockSetCurrentView}
       />
     );
-    const calendarButton = screen.getByText('預約記錄');
+    const calendarButton = screen.getByText('records');
     expect(calendarButton).toHaveClass('bg-blue-600');
   });
 
@@ -47,7 +47,7 @@ describe('NavigationHeader', () => {
         setCurrentView={mockSetCurrentView}
       />
     );
-    const bookingButton = screen.getByText('預約租借');
+    const bookingButton = screen.getByText('booking');
     fireEvent.click(bookingButton);
     expect(mockSetCurrentView).toHaveBeenCalledWith('booking');
   });
@@ -59,7 +59,7 @@ describe('NavigationHeader', () => {
         setCurrentView={mockSetCurrentView}
       />
     );
-    const calendarButton = screen.getByText('預約記錄');
+    const calendarButton = screen.getByText('records');
     fireEvent.click(calendarButton);
     expect(mockSetCurrentView).toHaveBeenCalledWith('calendar');
   });

@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocale } from '@/i18n';
 
 interface CalendarDay {
   date: Date;
@@ -28,17 +31,20 @@ const CalendarSelector: React.FC<CalendarSelectorProps> = ({
   navigateMonth,
   hasAvailableSlots,
 }) => {
+  const { locale } = useLocale();
+  const localeCode = locale === 'zh-TW' ? 'zh-TW' : 'en-US';
+
   return (
     <div>
       {/* 月份導航 */}
       <div className="flex items-center justify-between mb-6">
-        <button onClick={() => navigateMonth(-1)} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigateMonth(-1)} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer">
           <ChevronLeft size={20} />
         </button>
         <h3 className="text-lg font-semibold">
-          {currentMonth.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long' })}
+          {currentMonth.toLocaleDateString(localeCode, { year: 'numeric', month: 'long' })}
         </h3>
-        <button onClick={() => navigateMonth(1)} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigateMonth(1)} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer">
           <ChevronRight size={20} />
         </button>
       </div>
@@ -58,7 +64,7 @@ const CalendarSelector: React.FC<CalendarSelectorProps> = ({
               key={index}
               onClick={() => isSelectable && handleDateSelect(day.dateStr)}
               disabled={!isSelectable}
-              className={`h-12 text-sm rounded-lg transition-all relative ${day.isCurrentMonth ? day.isPast ? 'text-gray-300 cursor-not-allowed' : hasSlots ? day.isSelected ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-green-100 border border-green-200' : 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-300'} ${day.isToday ? 'ring-2 ring-orange-400' : ''}`}
+              className={`h-12 text-sm rounded-lg transition-all relative ${day.isCurrentMonth ? day.isPast ? 'text-gray-300 cursor-not-allowed' : hasSlots ? day.isSelected ? 'bg-blue-600 text-white cursor-pointer' : 'text-gray-700 hover:bg-green-100 border border-green-200 cursor-pointer' : 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-300'} ${day.isToday ? 'ring-2 ring-orange-400' : ''}`}
             >
               {day.day}
               {/* 可用時段指示器 */}

@@ -34,7 +34,7 @@ describe('BookingView', () => {
 
   it('renders booking form section', () => {
     render(<BookingView {...mockProps} />);
-    expect(screen.getByText('租借人資訊')).toBeInTheDocument();
+    expect(screen.getByText('userInfo')).toBeInTheDocument();
   });
 
   it('renders calendar selector', () => {
@@ -44,16 +44,11 @@ describe('BookingView', () => {
 
   it('renders date and time selection heading', () => {
     render(<BookingView {...mockProps} />);
-    expect(screen.getByText('選擇日期時段')).toBeInTheDocument();
+    expect(screen.getByText('selectDateTime')).toBeInTheDocument();
   });
 
-  it('renders venue rules', () => {
+  it('renders venue announcement', () => {
     render(<BookingView {...mockProps} />);
-    expect(screen.getByText('📋 場地使用規則')).toBeInTheDocument();
-  });
-
-  it('renders venue pricing', () => {
-    render(<BookingView {...mockProps} />);
-    expect(screen.getByText('💰 場地費用')).toBeInTheDocument();
+    expect(screen.getByText(/title/)).toBeInTheDocument();
   });
 });

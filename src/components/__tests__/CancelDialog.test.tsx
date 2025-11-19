@@ -21,8 +21,8 @@ describe('CancelDialog', () => {
         setBookingToCancel={mockSetBookingToCancel}
       />
     );
-    expect(screen.getByText('確認取消預約')).toBeInTheDocument();
-    expect(screen.getByText('您確定要取消這個預約嗎？此操作無法復原。')).toBeInTheDocument();
+    expect(screen.getByText('cancelTitle')).toBeInTheDocument();
+    expect(screen.getByText('cancelMessage')).toBeInTheDocument();
   });
 
   it('does not render when showCancelDialog is false', () => {
@@ -46,7 +46,7 @@ describe('CancelDialog', () => {
         setBookingToCancel={mockSetBookingToCancel}
       />
     );
-    const confirmButton = screen.getByText('確認取消');
+    const confirmButton = screen.getByText('confirmCancel');
     fireEvent.click(confirmButton);
     expect(mockConfirmCancelBooking).toHaveBeenCalled();
   });
@@ -60,7 +60,7 @@ describe('CancelDialog', () => {
         setBookingToCancel={mockSetBookingToCancel}
       />
     );
-    const keepButton = screen.getByText('保留預約');
+    const keepButton = screen.getByText('keepBooking');
     fireEvent.click(keepButton);
     expect(mockSetShowCancelDialog).toHaveBeenCalledWith(false);
     expect(mockSetBookingToCancel).toHaveBeenCalledWith(null);
