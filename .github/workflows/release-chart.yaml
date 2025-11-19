@@ -2,11 +2,8 @@ name: Release Helm Chart
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'helm/**'
-      - '.github/workflows/release-chart.yaml'
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 env:
