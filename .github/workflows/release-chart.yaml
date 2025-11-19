@@ -4,7 +4,16 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   REGISTRY: ghcr.io
@@ -13,13 +22,17 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -30,26 +43,73 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
-      - name: Package Helm Chart
-        run: |
-          helm dependency update charts/${{ env.CHART_NAME }}
-          helm package charts/${{ env.CHART_NAME }}
-
-      - name: Push Chart to GHCR
+      - name: Package and Push to GHCR
         run: |
           CHART_VERSION=$(grep '^version:' charts/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
+          
+          # Update dependencies
+          helm dependency update charts/${{ env.CHART_NAME }}
+          
+          # Package chart
+          helm package charts/${{ env.CHART_NAME }}
+          
+          # Push to GHCR
           helm push ${{ env.CHART_NAME }}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ github.repository_owner }}
+          
+          echo "CHART_VERSION=${CHART_VERSION}" >> $GITHUB_ENV
+
+      - name: Publish to GitHub Pages
+        run: |
+          # Download chart releaser
+          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz"
+          tar -xzf cr.tar.gz
+          rm -f cr.tar.gz
+          
+          repo=$(basename "$GITHUB_REPOSITORY")
+          owner=$(dirname "$GITHUB_REPOSITORY")
+          tag="${GITHUB_REF_NAME:1}"
+          
+          exists=$(curl -s -H "Accept: application/vnd.github.v3+json" https://github.com/$GITHUB_REPOSITORY/releases/tag/$repo-chart-$tag -w %{http_code} -o /dev/null)
+          
+          if [[ $exists != "200" ]]; then
+            echo "Creating chart release for GitHub Pages"
+            
+            # Package chart (already done above, reuse)
+            # Upload chart to github releases
+            ./cr upload \
+              --owner "$owner" \
+              --git-repo "$repo" \
+              --release-name-template "{{ .Name }}-chart-{{ .Version }}" \
+              --token "${{ secrets.GITHUB_TOKEN }}"
+            
+            # Update index and push to github pages
+            ./cr index \
+              --owner "$owner" \
+              --git-repo "$repo" \
+              --index-path ./index.yaml \
+              --release-name-template "{{ .Name }}-chart-{{ .Version }}" \
+              --push
+          else
+            echo "Chart release already exists"
+          fi
 
       - name: Summary
         run: |
-          CHART_VERSION=$(grep '^version:' charts/${{ env.CHART_NAME }}/Chart.yaml | awk '{print $2}')
           echo "## 🎉 Helm Chart Released" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Chart:** ${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${CHART_VERSION}" >> $GITHUB_STEP_SUMMARY
-          echo "**Registry:** ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ env.CHART_VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 Installation" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Installation Methods" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### From GHCR (OCI)" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "helm install ${{ env.CHART_NAME }} oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.CHART_NAME }} --version ${CHART_VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "helm install ${{ env.CHART_NAME }} oci://${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.CHART_NAME }} --version ${{ env.CHART_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### From GitHub Pages" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "helm repo add ${{ env.CHART_NAME }} https://${{ github.repository_owner }}.github.io/${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "helm repo update" >> $GITHUB_STEP_SUMMARY
+          echo "helm install my-${{ env.CHART_NAME }} ${{ env.CHART_NAME }}/${{ env.CHART_NAME }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
