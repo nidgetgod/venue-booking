@@ -158,7 +158,16 @@ For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 ### Quick Start
 
 ```bash
+# Add Helm repository
+helm repo add venue-booking https://nidgetgod.github.io/venue-booking/
+helm repo update
+
 # Install with Helm
+helm install venue-booking venue-booking/venue-booking \
+  --namespace venue-booking \
+  --create-namespace
+
+# Or install from local directory
 helm install venue-booking ./helm/venue-booking \
   --namespace venue-booking \
   --create-namespace

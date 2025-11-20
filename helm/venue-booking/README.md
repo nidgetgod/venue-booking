@@ -48,32 +48,33 @@ helm upgrade --install cnpg \
 
 ### Install the Chart
 
-#### From OCI Registry (Recommended)
+#### From Helm Repository (Recommended)
 
 ```bash
+# Add the Helm repository
+helm repo add venue-booking https://nidgetgod.github.io/venue-booking/
+helm repo update
+
 # Install with default values
-helm install venue-booking \
-  oci://ghcr.io/nidgetgod/venue-booking \
-  --version 0.1.0 \
+helm install venue-booking venue-booking/venue-booking \
+  --version 1.4.0 \
   --namespace venue-booking \
   --create-namespace
 
 # Install with custom values
-helm install venue-booking \
-  oci://ghcr.io/nidgetgod/venue-booking \
-  --version 0.1.0 \
+helm install venue-booking venue-booking/venue-booking \
+  --version 1.4.0 \
   -f custom-values.yaml \
   --namespace venue-booking \
   --create-namespace
 
 # Install with inline value overrides
-helm install venue-booking \
-  oci://ghcr.io/nidgetgod/venue-booking \
-  --version 0.1.0 \
+helm install venue-booking venue-booking/venue-booking \
+  --version 1.4.0 \
   --namespace venue-booking \
   --create-namespace \
   --set image.repository=your-registry/venue-booking \
-  --set image.tag=v1.0.0
+  --set image.tag=v1.4.0
 ```
 
 #### From Local Directory (Development)
@@ -97,38 +98,38 @@ helm install venue-booking . \
 
 ```bash
 # Show chart values
-helm show values oci://ghcr.io/nidgetgod/venue-booking --version 0.1.0
+helm show values venue-booking/venue-booking --version 1.4.0
 
 # Show chart README
-helm show readme oci://ghcr.io/nidgetgod/venue-booking --version 0.1.0
+helm show readme venue-booking/venue-booking --version 1.4.0
 
 # Show all chart information
-helm show all oci://ghcr.io/nidgetgod/venue-booking --version 0.1.0
+helm show all venue-booking/venue-booking --version 1.4.0
 ```
 
 ### Upgrade
 
 ```bash
-# Upgrade to new version from OCI registry
-helm upgrade venue-booking \
-  oci://ghcr.io/nidgetgod/venue-booking \
-  --version 0.2.0 \
+# Update repository
+helm repo update
+
+# Upgrade to new version
+helm upgrade venue-booking venue-booking/venue-booking \
+  --version 1.5.0 \
   --namespace venue-booking \
   --reuse-values
 
 # Upgrade with new values
-helm upgrade venue-booking \
-  oci://ghcr.io/nidgetgod/venue-booking \
-  --version 0.2.0 \
+helm upgrade venue-booking venue-booking/venue-booking \
+  --version 1.5.0 \
   -f updated-values.yaml \
   --namespace venue-booking
 
 # Upgrade with inline overrides
-helm upgrade venue-booking \
-  oci://ghcr.io/nidgetgod/venue-booking \
-  --version 0.2.0 \
+helm upgrade venue-booking venue-booking/venue-booking \
+  --version 1.5.0 \
   --namespace venue-booking \
-  --set image.tag=v1.1.0
+  --set image.tag=v1.5.0
 ```
 
 ### Uninstall
