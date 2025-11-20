@@ -1,0 +1,29 @@
+apiVersion: v1
+entries:
+  venue-booking:
+  - apiVersion: v2
+    appVersion: 1.4.0
+    created: "2025-11-20T02:12:37.763844281Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: cloudnative-pg
+      repository: https://cloudnative-pg.github.io/charts
+      version: 0.26.1
+    description: A Helm chart for Venue Booking application with CloudNativePG
+    digest: 3bf8aad5c312d457a0907e38a0c5e76719e87e96c177bf74deb48b735bd0d3a2
+    keywords:
+    - venue-booking
+    - postgresql
+    - cloudnative-pg
+    - nextjs
+    maintainers:
+    - email: nidgetgod@plantchosen.com
+      name: nidgetgod
+    name: venue-booking
+    sources:
+    - https://github.com/nidgetgod/venue-booking
+    type: application
+    urls:
+    - https://github.com/nidgetgod/venue-booking/releases/download/venue-booking-1.4.0/venue-booking-1.4.0.tgz
+    version: 1.4.0
+generated: "2025-11-20T02:12:37.763854711Z"
