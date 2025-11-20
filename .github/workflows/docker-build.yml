@@ -1,6 +1,7 @@
 name: Build and Push Docker Image
 
 on:
+  workflow_call:
   push:
     tags:
       - 'v*'  # Only trigger on version tags

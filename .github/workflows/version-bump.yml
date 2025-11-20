@@ -164,3 +164,19 @@ jobs:
               draft: false,
               prerelease: false
             });
+
+  build-docker:
+    needs: bump-version
+    uses: ./.github/workflows/docker-build.yml
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+
+  release-helm:
+    needs: bump-version
+    uses: ./.github/workflows/helm-release.yml
+    permissions:
+      contents: write
+      pages: write
